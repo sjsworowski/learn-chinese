@@ -1,0 +1,28 @@
+{
+  "name": "chinese-vocab-app",
+  "version": "1.0.0",
+  "description": "Chinese vocabulary learning app with React frontend and NestJS backend",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run start:dev",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:frontend": "cd frontend && npm run dev",
+    "start:backend": "cd backend && npm run start:dev",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "build": "cd frontend && npm run build && cd ../backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "seed": "cd backend && npx ts-node src/seed.ts",
+    "clean": "rimraf frontend/dist backend/dist",
+    "test": "cd frontend && npm run test && cd ../backend && npm run test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.5"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
