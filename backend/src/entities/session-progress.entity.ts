@@ -18,7 +18,7 @@ export class SessionProgress {
     @Column({ default: 0 })
     totalStudyTime: number;
 
-    @Column({ type: 'datetime', nullable: true })
+    @Column({ type: 'timestamp', nullable: true })
     lastStudied: Date;
 
     @CreateDateColumn()

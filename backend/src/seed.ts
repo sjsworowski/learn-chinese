@@ -9,10 +9,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const AppDataSource = new DataSource({
-    type: 'sqlite',
-    database: 'chinese-vocab.db',
+    type: 'postgres',
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: parseInt(process.env.POSTGRES_PORT, 10) || 5432,
+    username: process.env.POSTGRES_USER || 'postgres',
+    password: process.env.POSTGRES_PASSWORD || 'postgres',
+    database: process.env.POSTGRES_DB || 'chinese_vocab',
     entities: [User, Vocabulary, UserProgress, SessionProgress, TestSession],
-    synchronize: true,
+    synchronize: false,
     logging: true,
 });
 

@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { CheckCircle, Lock, ArrowRight, BookOpen, LogOut, TrendingUp, Target, User } from 'lucide-react';
 import axios from 'axios'
 import toast from 'react-hot-toast'
+/// <reference types="vite/client" />
 
 interface LearningStats {
     totalWords: number;
@@ -54,6 +55,8 @@ const Dashboard = () => {
     const [userProgress, setUserProgress] = useState<any[]>([])
     const roadmapRef = useRef<HTMLDivElement>(null);
 
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
     useEffect(() => {
         fetchStats()
         fetchVocabAndProgress()
@@ -67,7 +70,7 @@ const Dashboard = () => {
 
     const fetchStats = async () => {
         try {
-            const response = await axios.get('/api/stats')
+            const response = await axios.get(`${API_BASE}/stats`)
             setStats(response.data)
         } catch (error) {
             console.error('Failed to fetch stats from backend:', error)
@@ -76,7 +79,7 @@ const Dashboard = () => {
 
         // Get session progress from backend only
         try {
-            const sessionResponse = await axios.get('/api/session-progress')
+            const sessionResponse = await axios.get(`${API_BASE}/session-progress`)
             const sessionData = sessionResponse.data
 
             setSessionProgress({
@@ -94,7 +97,7 @@ const Dashboard = () => {
 
     const fetchVocabAndProgress = async () => {
         try {
-            const vocabResponse = await axios.get('/api/vocabulary')
+            const vocabResponse = await axios.get(`${API_BASE}/vocabulary`)
             setAllWords(vocabResponse.data)
             // userProgress is embedded in vocabResponse.data as isLearned, or you may need to fetch separately
         } catch (error) {
@@ -120,8 +123,8 @@ const Dashboard = () => {
 
         try {
             // Clear backend progress
-            await axios.post('/api/vocabulary/reset')
-            await axios.post('/api/session-progress/reset')
+            await axios.post(`${API_BASE}/vocabulary/reset`)
+            await axios.post(`${API_BASE}/session-progress/reset`)
 
             // Refresh stats
             await fetchStats()
@@ -138,37 +141,39 @@ const Dashboard = () => {
 
     // Helper to get button label and handler for current step
     const getStartLearningButton = () => {
-        if (currentStep === 0) {
+        const step = currentStep % 10;
+        if (step === 0) {
             return { label: 'Start Study Session', onClick: startStudy };
         }
-        if (currentStep === 1) {
+        if (step === 1) {
             return { label: 'Continue Study Session', onClick: startStudy };
         }
-        if (currentStep === 2) {
+        if (step === 2) {
             return { label: 'Recently Learned Test', onClick: () => navigate('/test?recent=true') };
         }
-        if (currentStep === 3) {
+        if (step === 3) {
             return { label: 'Recently Learned Pinyin Test', onClick: () => navigate('/pinyin-test?recent=true') };
         }
-        if (currentStep === 4) {
+        if (step === 4) {
             return { label: 'Continue Study Session', onClick: startStudy };
         }
-        if (currentStep === 5) {
+        if (step === 5) {
             return { label: 'Continue Study Session', onClick: startStudy };
         }
-        if (currentStep === 6) {
+        if (step === 6) {
             return { label: 'Recently Learned Test', onClick: () => navigate('/test?recent=true') };
         }
-        if (currentStep === 7) {
+        if (step === 7) {
             return { label: 'Recently Learned Pinyin Test', onClick: () => navigate('/pinyin-test?recent=true') };
         }
-        if (currentStep === 8) {
+        if (step === 8) {
             return { label: 'Take Test', onClick: () => navigate('/test') };
         }
-        if (currentStep === 9) {
+        if (step === 9) {
             return { label: 'Pinyin Test', onClick: () => navigate('/pinyin-test') };
         }
-        return { label: 'Start', onClick: () => { } };
+        // Default fallback (should not be reached)
+        return { label: 'Start Study Session', onClick: startStudy };
     };
 
     // Responsive window size
@@ -200,7 +205,7 @@ const Dashboard = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         )
     }

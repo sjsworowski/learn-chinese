@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -35,6 +36,8 @@ const normalizePinyin = (pinyin: string) => {
         .replace(/\s+/g, ''); // Remove all spaces
 };
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 const PinyinTest = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -59,7 +62,7 @@ const PinyinTest = () => {
 
     const logTestTime = async () => {
         try {
-            await axios.post('/api/vocabulary/log-activity', {
+            await axios.post(`${API_BASE}/vocabulary/log-activity`, {
                 type: 'test',
                 duration: testDuration
             });
@@ -72,7 +75,7 @@ const PinyinTest = () => {
         const fetchData = async () => {
             try {
                 // Check session progress
-                const sessionRes = await axios.get('/api/session-progress');
+                const sessionRes = await axios.get(`${API_BASE}/session-progress`);
                 if (!sessionRes.data || sessionRes.data.currentSession < 1) {
                     toast.error('Complete at least 1 session before taking the test.');
                     navigate('/');
@@ -82,7 +85,7 @@ const PinyinTest = () => {
                 const params = new URLSearchParams(location.search);
                 const isRecent = params.get('recent') === 'true';
                 // Fetch vocab
-                const vocabRes = await axios.get(isRecent ? '/api/vocabulary/recently-learned' : '/api/vocabulary');
+                const vocabRes = await axios.get(isRecent ? `${API_BASE}/vocabulary/recently-learned` : `${API_BASE}/vocabulary`);
                 // Only include learned words with pinyin
                 const learned = vocabRes.data.filter((w: VocabWord) => {
                     if (!w.isLearned) return false;
@@ -118,7 +121,7 @@ const PinyinTest = () => {
                 setAnswer('');
                 if (currentIdx === words.length - 1) {
                     try {
-                        await axios.post('/api/stats/test-completed');
+                        await axios.post(`${API_BASE}/stats/test-completed`);
                         await logTestTime();
                     } catch (e) {
                         console.error('Failed to record test completion or log test time', e);

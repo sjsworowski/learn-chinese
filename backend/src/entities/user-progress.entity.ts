@@ -19,7 +19,7 @@ export class UserProgress {
     @Column({ default: 0 })
     studyCount: number;
 
-    @Column({ type: 'datetime', nullable: true })
+    @Column({ type: 'timestamp', nullable: true })
     lastStudied: Date;
 
     @CreateDateColumn()

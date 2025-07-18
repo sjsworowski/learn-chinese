@@ -33,15 +33,15 @@ export class StatsService {
 
         // Count learned words by difficulty
         const beginnerLearned = await this.vocabRepository.createQueryBuilder('vocab')
-            .innerJoin('user_progress', 'progress', 'progress.vocabularyId = vocab.id AND progress.userId = :userId AND progress.isLearned = 1', { userId })
+            .innerJoin('user_progress', 'progress', 'progress.vocabularyId = vocab.id AND progress.userId = :userId AND progress.isLearned = true', { userId })
             .where('vocab.difficulty = :difficulty', { difficulty: 'beginner' })
             .getCount();
         const intermediateLearned = await this.vocabRepository.createQueryBuilder('vocab')
-            .innerJoin('user_progress', 'progress', 'progress.vocabularyId = vocab.id AND progress.userId = :userId AND progress.isLearned = 1', { userId })
+            .innerJoin('user_progress', 'progress', 'progress.vocabularyId = vocab.id AND progress.userId = :userId AND progress.isLearned = true', { userId })
             .where('vocab.difficulty = :difficulty', { difficulty: 'intermediate' })
             .getCount();
         const advancedLearned = await this.vocabRepository.createQueryBuilder('vocab')
-            .innerJoin('user_progress', 'progress', 'progress.vocabularyId = vocab.id AND progress.userId = :userId AND progress.isLearned = 1', { userId })
+            .innerJoin('user_progress', 'progress', 'progress.vocabularyId = vocab.id AND progress.userId = :userId AND progress.isLearned = true', { userId })
             .where('vocab.difficulty = :difficulty', { difficulty: 'advanced' })
             .getCount();
 

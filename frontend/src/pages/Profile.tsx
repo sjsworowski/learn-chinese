@@ -1,9 +1,12 @@
+/// <reference types="vite/client" />
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { User, RefreshCcw, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Profile = () => {
     const { user, logout } = useAuth();
@@ -13,8 +16,8 @@ const Profile = () => {
         const confirmed = window.confirm('Are you sure you want to reset all your progress? This action cannot be undone.');
         if (!confirmed) return;
         try {
-            await axios.post('/api/vocabulary/reset');
-            await axios.post('/api/session-progress/reset');
+            await axios.post(`${API_BASE}/vocabulary/reset`);
+            await axios.post(`${API_BASE}/session-progress/reset`);
             toast.success('Progress reset successfully!');
             navigate('/');
         } catch (error) {

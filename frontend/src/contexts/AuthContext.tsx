@@ -46,7 +46,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            const response = await axios.get('/api/auth/me')
+            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+            const response = await axios.get(`${API_BASE}/auth/me`)
             setUser(response.data)
         } catch (error) {
             localStorage.removeItem('token')
@@ -59,7 +60,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const login = async (email: string, password: string) => {
         try {
             console.log('Attempting login with:', email)
-            const response = await axios.post('/api/auth/login', { email, password })
+            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+            const response = await axios.post(`${API_BASE}/auth/login`, { email, password })
             const { access_token, user } = response.data
 
             localStorage.setItem('token', access_token)
@@ -75,7 +77,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const register = async (email: string, username: string, password: string) => {
         try {
-            const response = await axios.post('/api/auth/register', { email, username, password })
+            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+            const response = await axios.post(`${API_BASE}/auth/register`, { email, username, password })
             const { access_token, user } = response.data
             localStorage.setItem('token', access_token)
             axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`

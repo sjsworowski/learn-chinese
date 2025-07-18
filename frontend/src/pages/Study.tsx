@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Volume2, Check, Trophy, CheckCircle, Clock } from 'lucide-react'
@@ -12,6 +13,8 @@ interface VocabularyWord {
     imageUrl: string
     isLearned: boolean
 }
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Study = () => {
     const navigate = useNavigate()
@@ -48,14 +51,14 @@ const Study = () => {
 
     const fetchWords = async () => {
         try {
-            const response = await axios.get('/api/vocabulary')
+            const response = await axios.get(`${API_BASE}/vocabulary`)
             const allWords = response.data
             setWords(allWords)
 
             // Get session progress from backend only
             let startSession = 0;
             try {
-                const sessionResponse = await axios.get('/api/session-progress')
+                const sessionResponse = await axios.get(`${API_BASE}/session-progress`)
                 const sessionData = sessionResponse.data
                 startSession = Math.min(sessionData.currentSession, Math.floor(allWords.length / 10))
             } catch (error) {
@@ -106,7 +109,7 @@ const Study = () => {
 
     const markWordAsLearned = async (wordId: string) => {
         try {
-            await axios.post(`/api/vocabulary/${wordId}/learn`);
+            await axios.post(`${API_BASE}/vocabulary/${wordId}/learn`);
             setWords(prev => prev.map(word =>
                 word.id === wordId ? { ...word, isLearned: true } : word
             ));
@@ -163,7 +166,7 @@ const Study = () => {
 
             // Save to backend only
             try {
-                await axios.put('/api/session-progress', {
+                await axios.put(`${API_BASE}/session-progress`, {
                     currentSession: nextSession,
                     wordsStudied: studySession.wordsStudied,
                     wordsLearned: studySession.wordsLearned,
@@ -177,7 +180,7 @@ const Study = () => {
 
     const logStudyTime = async () => {
         try {
-            await axios.post('/api/vocabulary/log-activity', {
+            await axios.post(`${API_BASE}/vocabulary/log-activity`, {
                 type: 'study',
                 duration: studySession.sessionTime
             });
@@ -190,7 +193,7 @@ const Study = () => {
         // Save completed session progress to backend only
         const nextSession = currentSession + 1;
         try {
-            await axios.put('/api/session-progress', {
+            await axios.put(`${API_BASE}/session-progress`, {
                 currentSession: nextSession,
                 wordsStudied: studySession.wordsStudied,
                 wordsLearned: studySession.wordsLearned,
@@ -230,7 +233,7 @@ const Study = () => {
     const handleIntermediateSessionComplete = async () => {
         // Save current session progress before completing
         try {
-            await axios.put('/api/session-progress', {
+            await axios.put(`${API_BASE}/session-progress`, {
                 currentSession: currentSession,
                 wordsStudied: studySession.wordsStudied,
                 wordsLearned: studySession.wordsLearned,
@@ -252,7 +255,7 @@ const Study = () => {
 
         // Save current session progress before completing
         try {
-            await axios.put('/api/session-progress', {
+            await axios.put(`${API_BASE}/session-progress`, {
                 currentSession: currentSession,
                 wordsStudied: studySession.wordsStudied,
                 wordsLearned: studySession.wordsLearned,
@@ -266,14 +269,14 @@ const Study = () => {
         // Clear session tracking if this is the final session
         if (isFinalSession) {
             try {
-                await axios.post('/api/session-progress/reset');
+                await axios.post(`${API_BASE}/session-progress/reset`);
             } catch (error) {
                 console.error('Failed to reset session progress in backend:', error);
             }
         }
 
         try {
-            await axios.post('/api/stats/session', {
+            await axios.post(`${API_BASE}/stats/session`, {
                 sessionTime: studySession.sessionTime,
                 wordsStudied: studySession.wordsStudied,
                 wordsLearned: studySession.wordsLearned
@@ -308,7 +311,7 @@ const Study = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
         )
     }

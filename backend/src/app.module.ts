@@ -16,8 +16,12 @@ import { UserActivity } from './entities/user-activity.entity';
 @Module({
     imports: [
         TypeOrmModule.forRoot({
-            type: 'sqlite',
-            database: 'chinese-vocab.db',
+            type: 'postgres',
+            host: process.env.POSTGRES_HOST || 'localhost',
+            port: parseInt(process.env.POSTGRES_PORT, 10) || 5432,
+            username: process.env.POSTGRES_USER || 'postgres',
+            password: process.env.POSTGRES_PASSWORD || 'postgres',
+            database: process.env.POSTGRES_DB || 'chinese_vocab',
             entities: [
                 User,
                 UserProgress,
@@ -26,7 +30,7 @@ import { UserActivity } from './entities/user-activity.entity';
                 TestSession,
                 UserActivity
             ],
-            synchronize: true,
+            synchronize: false,
         }),
         JwtModule.register({
             secret: process.env.JWT_SECRET || 'your-secret-key',

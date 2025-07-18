@@ -1,7 +1,10 @@
+/// <reference types="vite/client" />
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { BookOpen, Eye, EyeOff } from 'lucide-react'
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Register = () => {
     const [email, setEmail] = useState('')
@@ -110,7 +113,7 @@ const Register = () => {
                                 className="btn-primary w-full"
                             >
                                 {isLoading ? (
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                                 ) : (
                                     'Sign up'
                                 )}
