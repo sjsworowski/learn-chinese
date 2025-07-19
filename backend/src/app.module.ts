@@ -12,6 +12,7 @@ import { UserProgress } from './entities/user-progress.entity';
 import { SessionProgress } from './entities/session-progress.entity';
 import { TestSession } from './entities/test-session.entity';
 import { UserActivity } from './entities/user-activity.entity';
+import { HealthController } from './health.controller';
 
 @Module({
     imports: [
@@ -30,7 +31,8 @@ import { UserActivity } from './entities/user-activity.entity';
                 TestSession,
                 UserActivity
             ],
-            synchronize: false,
+            synchronize: false, // Keep false for production safety
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
         }),
         JwtModule.register({
             secret: process.env.JWT_SECRET || 'your-secret-key',
@@ -42,5 +44,6 @@ import { UserActivity } from './entities/user-activity.entity';
         StatsModule,
         SessionProgressModule,
     ],
+    controllers: [HealthController],
 })
 export class AppModule { } 

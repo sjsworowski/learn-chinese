@@ -14,6 +14,13 @@ export class SessionProgressService {
     ) { }
 
     async getSessionProgress(userId: string) {
+        // First verify the user exists
+        const userRepo = this.sessionProgressRepository.manager.getRepository('User');
+        const user = await userRepo.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new Error(`User with ID ${userId} not found`);
+        }
+
         let sessionProgress = await this.sessionProgressRepository.findOne({
             where: { userId }
         });
