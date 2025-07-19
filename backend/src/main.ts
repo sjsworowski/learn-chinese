@@ -22,7 +22,12 @@ async function bootstrap() {
     }
 
     app.enableCors({
-        origin: ['http://localhost:3000', 'http://frontend:80'],
+        origin: [
+            'http://localhost:3000',
+            'http://frontend:80',
+            'https://chinese-vocab-frontend.onrender.com',
+            'https://your-frontend-url.onrender.com' // Update this with your actual frontend URL
+        ],
         credentials: true,
     });
     app.setGlobalPrefix('api');

@@ -101,7 +101,23 @@ docker-compose exec backend npm run migration:run
 
 ---
 
-## Railway Deployment
+## Render Deployment
+
+### Quick Setup
+1. **Create a Render account** at https://render.com/
+2. **Connect your GitHub repository**
+3. **Create a new Web Service** and select your repository
+4. **Render will automatically detect** the `render.yaml` configuration
+5. **Deploy** - Render will build and deploy your app automatically
+
+### Render-Specific Configuration
+- Uses `render.yaml` for service configuration
+- PostgreSQL database is automatically provisioned
+- Environment variables are automatically configured
+- SSL certificates are automatically provided
+- Free tier includes 750 hours/month of runtime
+
+## Railway Deployment (Alternative)
 
 ### Quick Setup
 1. **Create a Railway account** at https://railway.app/
