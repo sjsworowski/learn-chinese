@@ -2,7 +2,7 @@ services:
   - type: web
     name: chinese-vocab-backend
     env: node
-    plan: free
+    plan: starter
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && npm run start:prod
     envVars:
@@ -34,7 +34,7 @@ services:
   - type: web
     name: chinese-vocab-frontend
     env: static
-    plan: free
+    plan: starter
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     envVars:
@@ -45,4 +45,4 @@ databases:
   - name: chinese-vocab-db
     databaseName: chinese_vocab
     user: chinese_vocab_user
-    plan: free 
+    plan: starter 
