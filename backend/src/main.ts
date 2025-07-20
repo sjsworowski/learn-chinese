@@ -25,8 +25,8 @@ async function bootstrap() {
         origin: [
             'http://localhost:3000',
             'http://frontend:80',
-            'https://chinese-vocab-frontend.onrender.com',
-            'https://your-frontend-url.onrender.com' // Update this with your actual frontend URL
+            'https://chinese-vocab-app.web.app',
+            'https://chinese-vocab-app.firebaseapp.com'
         ],
         credentials: true,
     });

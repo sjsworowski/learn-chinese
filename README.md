@@ -101,43 +101,42 @@ docker-compose exec backend npm run migration:run
 
 ---
 
-## Render Deployment
+## Firebase + Cloud Run Deployment
 
 ### Quick Setup
-1. **Create a Render account** at https://render.com/
-2. **Connect your GitHub repository**
-3. **Create a new Web Service** and select your repository
-4. **Render will automatically detect** the `render.yaml` configuration
-5. **Deploy** - Render will build and deploy your app automatically
+1. **Create a Google Cloud Project** at https://console.cloud.google.com/
+2. **Enable Firebase** in your project
+3. **Install Firebase CLI**: `npm install -g firebase-tools`
+4. **Login to Firebase**: `firebase login`
+5. **Initialize Firebase**: `firebase init`
+6. **Deploy frontend**: `./deploy-firebase.sh`
+7. **Deploy backend**: `./deploy-cloudrun.sh`
 
-### Render-Specific Configuration
-- Uses `render.yaml` for service configuration
-- PostgreSQL database is automatically provisioned
-- Environment variables are automatically configured
-- SSL certificates are automatically provided
-- Free tier includes 750 hours/month of runtime
+### Firebase + Cloud Run Configuration
+- **Frontend**: Firebase Hosting (free tier)
+- **Backend**: Cloud Run (free tier)
+- **Database**: Firestore or Cloud SQL (free tier)
+- **Authentication**: Firebase Auth (free tier)
+- **SSL certificates**: Automatically provided
+- **Custom domains**: Supported
 
-## Railway Deployment (Alternative)
+### Environment Setup
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
 
-### Quick Setup
-1. **Create a Railway account** at https://railway.app/
-2. **Connect your GitHub repository**
-3. **Add PostgreSQL service** to your project
-4. **Set environment variables** in Railway dashboard:
-   - `POSTGRES_HOST` (from Railway PostgreSQL service)
-   - `POSTGRES_PORT` (5432)
-   - `POSTGRES_USER` (from Railway PostgreSQL service)
-   - `POSTGRES_PASSWORD` (from Railway PostgreSQL service)
-   - `POSTGRES_DB` (chinese_vocab)
-   - `JWT_SECRET` (your secret key)
-   - `VITE_API_URL` (your backend URL + /api)
-5. **Deploy** - Railway will automatically build and deploy your app
+# Login to Firebase
+firebase login
 
-### Railway-Specific Configuration
-- The app uses `docker-compose.railway.yml` for Railway deployment
-- SSL is automatically configured for production
-- Database migrations run automatically on startup
-- Health checks are configured for monitoring
+# Initialize Firebase (select Hosting)
+firebase init
+
+# Set up Google Cloud
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+```
+
+
 
 ## License
 MIT 

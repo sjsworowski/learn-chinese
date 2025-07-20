@@ -1,0 +1,30 @@
+steps:
+  # Build the backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/chinese-vocab-backend', './backend']
+  
+  # Push the backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/chinese-vocab-backend']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'chinese-vocab-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/chinese-vocab-backend'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'NODE_ENV=production,JWT_SECRET=${_JWT_SECRET}'
+      - '--set-env-vars'
+      - 'POSTGRES_HOST=${_POSTGRES_HOST},POSTGRES_PORT=${_POSTGRES_PORT},POSTGRES_USER=${_POSTGRES_USER},POSTGRES_PASSWORD=${_POSTGRES_PASSWORD},POSTGRES_DB=${_POSTGRES_DB}'
+
+images:
+  - 'gcr.io/$PROJECT_ID/chinese-vocab-backend' 

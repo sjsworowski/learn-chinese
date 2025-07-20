@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+            const API_BASE = import.meta.env.VITE_API_URL || 'https://chinese-vocab-backend-xxxxx-uc.a.run.app/api';
             const response = await axios.get(`${API_BASE}/auth/me`)
             setUser(response.data)
         } catch (error) {
@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const login = async (email: string, password: string) => {
         try {
             console.log('Attempting login with:', email)
-            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+            const API_BASE = import.meta.env.VITE_API_URL || 'https://chinese-vocab-backend-xxxxx-uc.a.run.app/api';
             const response = await axios.post(`${API_BASE}/auth/login`, { email, password })
             const { access_token, user } = response.data
 
@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const register = async (email: string, username: string, password: string) => {
         try {
-            const API_BASE = import.meta.env.VITE_API_URL || '/api';
+            const API_BASE = import.meta.env.VITE_API_URL || 'https://chinese-vocab-backend-xxxxx-uc.a.run.app/api';
             const response = await axios.post(`${API_BASE}/auth/register`, { email, username, password })
             const { access_token, user } = response.data
             localStorage.setItem('token', access_token)
