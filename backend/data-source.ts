@@ -4,20 +4,22 @@ import { Vocabulary } from './src/entities/vocabulary.entity';
 import { UserProgress } from './src/entities/user-progress.entity';
 import { SessionProgress } from './src/entities/session-progress.entity';
 import { TestSession } from './src/entities/test-session.entity';
+import { UserActivity } from './src/entities/user-activity.entity';
 
 export default new DataSource({
     type: 'postgres',
-    host: process.env.POSTGRES_HOST || 'localhost',
+    host: process.env.POSTGRES_HOST || 'postgres',
     port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
     username: process.env.POSTGRES_USER || 'postgres',
     password: process.env.POSTGRES_PASSWORD || 'postgres',
-    database: process.env.POSTGRES_DB || 'chinese_vocab',
+    database: process.env.POSTGRES_DB || 'postgres',
     entities: [
         User,
         Vocabulary,
         UserProgress,
         SessionProgress,
         TestSession,
+        UserActivity,
     ],
     migrations: ['src/migrations/*.ts'],
 });

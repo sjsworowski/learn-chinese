@@ -25,14 +25,13 @@ async function bootstrap() {
         origin: [
             'http://localhost:3000',
             'http://frontend:80',
-            'https://chinese-vocab-app.web.app',
-            'https://chinese-vocab-app.firebaseapp.com'
+            'https://learn-chinese-15859.web.app' // <-- Add your deployed frontend URL here
         ],
         credentials: true,
     });
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    await app.listen(3001);
-    console.log('Application is running on: http://localhost:3001');
+    await app.listen(process.env.PORT || 3001);
+    console.log(`Application is running on: http://localhost:${process.env.PORT || 3001}`);
 }
 bootstrap();

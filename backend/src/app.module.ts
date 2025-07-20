@@ -22,7 +22,7 @@ import { HealthController } from './health.controller';
             port: parseInt(process.env.POSTGRES_PORT, 10) || 5432,
             username: process.env.POSTGRES_USER || 'postgres',
             password: process.env.POSTGRES_PASSWORD || 'postgres',
-            database: process.env.POSTGRES_DB || 'chinese_vocab',
+            database: process.env.POSTGRES_DB || 'postgres',
             entities: [
                 User,
                 UserProgress,
