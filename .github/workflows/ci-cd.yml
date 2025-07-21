@@ -1,0 +1,73 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Build backend
+        run: |
+          cd backend
+          npm run build
+
+      - name: Run backend tests
+        run: |
+          cd backend
+          npm test
+
+  migrate-and-deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run DB migrations on Supabase
+        run: |
+          cd backend
+          npm run migration:run
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+
+      # Add your deployment step here (e.g., Docker build/push, gcloud deploy, etc.)
+      # - name: Deploy to Cloud Run
+      #   run: |
+      #     ./deploy-cloudrun.sh
+      #   env:
+      #     # Set any required env vars for deployment
+      #     GCLOUD_PROJECT: ${{ secrets.GCLOUD_PROJECT }}
+      #     JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      #     ...
+
+      # Example: Notify on success
+      - name: Notify success
+        run: echo "Deployment and migration completed!" 

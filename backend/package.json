@@ -10,7 +10,8 @@
         "start:prod": "node dist/main.js",
         "seed": "ts-node src/seed.ts",
         "migration:generate": "npx typeorm-ts-node-commonjs -d ./data-source.ts migration:generate",
-        "migration:run": "npx typeorm-ts-node-commonjs -d ./data-source.ts migration:run"
+        "migration:run": "node run-migration.js",
+        "migration:run:local": "cross-env POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=postgres node run-migration.js"
     },
     "dependencies": {
         "@nestjs/common": "^10.0.0",
@@ -19,9 +20,11 @@
         "@nestjs/passport": "^10.0.2",
         "@nestjs/platform-express": "^10.0.0",
         "@nestjs/typeorm": "^10.0.0",
+        "@types/pg": "^8.15.4",
         "bcryptjs": "^2.4.3",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.2",
+        "dotenv": "^16.6.1",
         "passport": "^0.6.0",
         "passport-jwt": "^4.0.1",
         "passport-local": "^1.0.0",
@@ -41,6 +44,7 @@
         "@types/passport-local": "^1.0.35",
         "@typescript-eslint/eslint-plugin": "^6.0.0",
         "@typescript-eslint/parser": "^6.0.0",
+        "cross-env": "^7.0.3",
         "eslint": "^8.42.0",
         "eslint-config-prettier": "^9.0.0",
         "eslint-plugin-prettier": "^5.0.0",

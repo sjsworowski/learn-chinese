@@ -38,7 +38,7 @@ POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
-POSTGRES_DB=chinese_vocab
+POSTGRES_DB=postgres
 
 # Frontend
 VITE_API_URL=http://backend:3001/api

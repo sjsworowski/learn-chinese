@@ -4,68 +4,54 @@ import { Vocabulary } from './entities/vocabulary.entity';
 import { UserProgress } from './entities/user-progress.entity';
 import { SessionProgress } from './entities/session-progress.entity';
 import { TestSession } from './entities/test-session.entity';
+import { UserActivity } from './entities/user-activity.entity';
+import { seedDatabaseIfNeeded } from './seed-util';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const AppDataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.POSTGRES_HOST || 'localhost',
-    port: parseInt(process.env.POSTGRES_PORT, 10) || 5432,
-    username: process.env.POSTGRES_USER || 'postgres',
-    password: process.env.POSTGRES_PASSWORD || 'postgres',
-    database: process.env.POSTGRES_DB || 'postgres',
-    entities: [User, Vocabulary, UserProgress, SessionProgress, TestSession],
-    synchronize: false,
-    logging: true,
-});
+const isValidDatabaseUrl = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres');
 
-async function seed() {
-    await AppDataSource.initialize();
-
-    await AppDataSource.synchronize();
-
-    const userRepo = AppDataSource.getRepository(User);
-    const vocabRepo = AppDataSource.getRepository(Vocabulary);
-
-    const demoEmail = 'test@example.com';
-    let user = await userRepo.findOne({ where: { email: demoEmail } });
-    if (!user) {
-        user = userRepo.create({
-            email: demoEmail,
-            username: 'DemoUser',
-            password: await bcrypt.hash('password123', 10),
-        });
-        await userRepo.save(user);
-        console.log('Demo user created');
-    }
-
-    // Load vocab from JSON
-    const vocabPath = path.join(__dirname, 'vocab.json');
-    const vocabJson = fs.readFileSync(vocabPath, 'utf-8');
-    const vocabularyData = JSON.parse(vocabJson);
-
-    for (const vocabData of vocabularyData) {
-        // Ensure imageUrl is present and set to empty string if missing
-        if (!('imageUrl' in vocabData)) {
-            vocabData.imageUrl = '';
+const dataSource = new DataSource(
+    isValidDatabaseUrl
+        ? {
+            type: 'postgres',
+            url: process.env.DATABASE_URL,
+            ssl: { rejectUnauthorized: false },
+            entities: [
+                User,
+                Vocabulary,
+                UserProgress,
+                SessionProgress,
+                TestSession,
+                UserActivity,
+            ],
         }
-        // Only insert if not already present
-        const existingVocab = await vocabRepo.findOne({
-            where: { chinese: vocabData.chinese }
-        });
-        if (!existingVocab) {
-            const vocab = vocabRepo.create(vocabData);
-            await vocabRepo.save(vocab);
-            console.log(`Vocabulary "${vocabData.chinese}" created`);
+        : {
+            type: 'postgres',
+            host: process.env.POSTGRES_HOST || 'localhost',
+            port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+            username: process.env.POSTGRES_USER || 'postgres',
+            password: process.env.POSTGRES_PASSWORD || 'postgres',
+            database: process.env.POSTGRES_DB || 'postgres',
+            entities: [
+                User,
+                Vocabulary,
+                UserProgress,
+                SessionProgress,
+                TestSession,
+                UserActivity,
+            ],
         }
-    }
+);
 
-    console.log('Database seeded successfully!');
-    await AppDataSource.destroy();
+async function main() {
+    await dataSource.initialize();
+    await seedDatabaseIfNeeded(dataSource);
+    await dataSource.destroy();
 }
 
-seed().catch(error => {
-    console.error('Error seeding database:', error);
+main().catch((err) => {
+    console.error('Seeding failed:', err);
     process.exit(1);
 }); 

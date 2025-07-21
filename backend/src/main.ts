@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { seedDatabaseIfNeeded } from './seed-util';
 
 async function bootstrap() {
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);
     const app = await NestFactory.create(AppModule);
 
     // Get TypeORM DataSource from DI container
