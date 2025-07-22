@@ -13,54 +13,71 @@ import { SessionProgress } from './entities/session-progress.entity';
 import { TestSession } from './entities/test-session.entity';
 import { UserActivity } from './entities/user-activity.entity';
 import { HealthController } from './health.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-    imports: [
-        TypeOrmModule.forRoot(
-            process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres')
-                ? {
-                    type: 'postgres',
-                    url: process.env.DATABASE_URL,
-                    ssl: { rejectUnauthorized: false }, // SSL for Supabase/Cloud
-                    entities: [
-                        User,
-                        UserProgress,
-                        SessionProgress,
-                        Vocabulary,
-                        TestSession,
-                        UserActivity
-                    ],
-                    synchronize: false, // Keep false for production safety
-                }
-                : {
-                    type: 'postgres',
-                    host: process.env.POSTGRES_HOST || 'localhost',
-                    port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
-                    username: process.env.POSTGRES_USER || 'postgres',
-                    password: process.env.POSTGRES_PASSWORD || 'postgres',
-                    database: process.env.POSTGRES_DB || 'postgres',
-                    entities: [
-                        User,
-                        UserProgress,
-                        SessionProgress,
-                        Vocabulary,
-                        TestSession,
-                        UserActivity
-                    ],
-                    synchronize: false,
-                    ssl: false, // No SSL for local!
-                }
-        ),
-        JwtModule.register({
-            secret: process.env.JWT_SECRET || 'process.env.JWT_SECRET',
-            signOptions: { expiresIn: '7d' },
-        }),
-        PassportModule,
-        AuthModule,
-        VocabularyModule,
-        StatsModule,
-        SessionProgressModule,
-    ],
-    controllers: [HealthController],
+  imports: [
+    // Load environment variables from .env
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+
+    // Dynamic TypeORM config
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const isCloud = config.get<string>('DATABASE_URL')?.startsWith('postgres');
+
+        return isCloud
+          ? {
+              type: 'postgres',
+              url: config.get<string>('DATABASE_URL'),
+              ssl: { rejectUnauthorized: false },
+              entities: [
+                User,
+                UserProgress,
+                SessionProgress,
+                Vocabulary,
+                TestSession,
+                UserActivity,
+              ],
+              synchronize: false,
+            }
+          : {
+              type: 'postgres',
+              host: config.get<string>('POSTGRES_HOST', 'localhost'),
+              port: parseInt(config.get<string>('POSTGRES_PORT', '5432'), 10),
+              username: config.get<string>('POSTGRES_USER', 'postgres'),
+              password: config.get<string>('POSTGRES_PASSWORD', 'postgres'),
+              database: config.get<string>('POSTGRES_DB', 'postgres'),
+              ssl: false,
+              entities: [
+                User,
+                UserProgress,
+                SessionProgress,
+                Vocabulary,
+                TestSession,
+                UserActivity,
+              ],
+              synchronize: false,
+            };
+      },
+    }),
+
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET', 'fallback-secret'),
+        signOptions: { expiresIn: '7d' },
+      }),
+    }),
+
+    PassportModule,
+    AuthModule,
+    VocabularyModule,
+    StatsModule,
+    SessionProgressModule,
+  ],
+  controllers: [HealthController],
 })
-export class AppModule { } 
+export class AppModule {}

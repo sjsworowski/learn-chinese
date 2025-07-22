@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config(); // ← THIS LINE is critical
+
 import { DataSource } from 'typeorm';
 import { User } from './src/entities/user.entity';
 import { Vocabulary } from './src/entities/vocabulary.entity';
@@ -6,12 +9,9 @@ import { SessionProgress } from './src/entities/session-progress.entity';
 import { TestSession } from './src/entities/test-session.entity';
 import { UserActivity } from './src/entities/user-activity.entity';
 
-console.log('process.env.POSTGRES_HOST', process.env.POSTGRES_HOST)
-console.log(process.env.POSTGRES_PORT)
-console.log(process.env.POSTGRES_USER)
-console.log(process.env.POSTGRES_PASSWORD)
-console.log(process.env.POSTGRES_DB)
-console.log(process.env.JWT_SECRET)
+// Logging to verify
+console.log('process.env.DATABASE_URL:', process.env.DATABASE_URL);
+console.log('process.env.POSTGRES_HOST', process.env.POSTGRES_HOST);
 
 const isValidDatabaseUrl = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres');
 
@@ -50,4 +50,3 @@ export default new DataSource(
             ssl: false, // No SSL for local!
         }
 );
-
