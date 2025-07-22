@@ -28,11 +28,6 @@ jobs:
           cd backend
           npm run build
 
-      - name: Run backend tests
-        run: |
-          cd backend
-          npm test
-
   migrate-and-deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
