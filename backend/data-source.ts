@@ -20,7 +20,7 @@ export default new DataSource(
         ? {
             type: 'postgres',
             url: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false },
+            ssl: { rejectUnauthorized: false }, // SSL for Supabase/Cloud
             entities: [
                 User,
                 Vocabulary,
@@ -33,7 +33,7 @@ export default new DataSource(
         }
         : {
             type: 'postgres',
-            host: process.env.POSTGRES_HOST || 'postgres',
+            host: process.env.POSTGRES_HOST || 'localhost',
             port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
             username: process.env.POSTGRES_USER || 'postgres',
             password: process.env.POSTGRES_PASSWORD || 'postgres',
@@ -47,6 +47,7 @@ export default new DataSource(
                 UserActivity,
             ],
             migrations: ['src/migrations/*.ts'],
+            ssl: false, // No SSL for local!
         }
 );
 
