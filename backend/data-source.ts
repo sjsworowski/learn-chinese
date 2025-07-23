@@ -1,5 +1,6 @@
+// data-source.ts
 import * as dotenv from 'dotenv';
-dotenv.config(); // ← THIS LINE is critical
+dotenv.config(); // load .env early
 
 import { DataSource } from 'typeorm';
 import { User } from './src/entities/user.entity';
@@ -9,44 +10,61 @@ import { SessionProgress } from './src/entities/session-progress.entity';
 import { TestSession } from './src/entities/test-session.entity';
 import { UserActivity } from './src/entities/user-activity.entity';
 
-// Logging to verify
-console.log('process.env.DATABASE_URL:', process.env.DATABASE_URL);
-console.log('process.env.POSTGRES_HOST', process.env.POSTGRES_HOST);
+// Helper to parse port with fallback
+const parsePort = (port?: string, fallback = 5432) =>
+  port ? parseInt(port, 10) : fallback;
 
-const isValidDatabaseUrl = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres');
+const useDatabaseUrl = !!process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgres');
+
+if (!useDatabaseUrl) {
+  // Validate individual env vars if DATABASE_URL is not used
+  if (
+    !process.env.POSTGRES_HOST ||
+    !process.env.POSTGRES_USER ||
+    !process.env.POSTGRES_PASSWORD ||
+    !process.env.POSTGRES_DB
+  ) {
+    throw new Error(
+      'One or more required Postgres environment variables (POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB) are missing'
+    );
+  }
+}
+
+console.log('Using DATABASE_URL:', process.env.DATABASE_URL);
+console.log('Using POSTGRES_HOST:', process.env.POSTGRES_HOST);
 
 export default new DataSource(
-    isValidDatabaseUrl
-        ? {
-            type: 'postgres',
-            url: process.env.DATABASE_URL,
-            ssl: { rejectUnauthorized: false }, // SSL for Supabase/Cloud
-            entities: [
-                User,
-                Vocabulary,
-                UserProgress,
-                SessionProgress,
-                TestSession,
-                UserActivity,
-            ],
-            migrations: ['src/migrations/*.ts'],
-        }
-        : {
-            type: 'postgres',
-            host: process.env.POSTGRES_HOST || 'localhost',
-            port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
-            username: process.env.POSTGRES_USER || 'postgres',
-            password: process.env.POSTGRES_PASSWORD || 'postgres',
-            database: process.env.POSTGRES_DB || 'postgres',
-            entities: [
-                User,
-                Vocabulary,
-                UserProgress,
-                SessionProgress,
-                TestSession,
-                UserActivity,
-            ],
-            migrations: ['src/migrations/*.ts'],
-            ssl: false, // No SSL for local!
-        }
+  useDatabaseUrl
+    ? {
+        type: 'postgres',
+        url: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }, // For Supabase and similar
+        entities: [
+          User,
+          Vocabulary,
+          UserProgress,
+          SessionProgress,
+          TestSession,
+          UserActivity,
+        ],
+        migrations: ['src/migrations/*.ts'],
+      }
+    : {
+        type: 'postgres',
+        host: process.env.POSTGRES_HOST,
+        port: parsePort(process.env.POSTGRES_PORT),
+        username: process.env.POSTGRES_USER,
+        password: process.env.POSTGRES_PASSWORD,
+        database: process.env.POSTGRES_DB,
+        ssl: { rejectUnauthorized: false }, // Adjust as needed (true/false)
+        entities: [
+          User,
+          Vocabulary,
+          UserProgress,
+          SessionProgress,
+          TestSession,
+          UserActivity,
+        ],
+        migrations: ['src/migrations/*.ts'],
+      }
 );

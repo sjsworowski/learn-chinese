@@ -46,13 +46,6 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run DB migrations on Supabase
-        run: |
-          cd backend
-          npm run migration:run
-        env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
-
       - name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v1
         with:
