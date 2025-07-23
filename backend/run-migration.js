@@ -12,7 +12,7 @@ console.log('Child process env.DATABASE_URL:', env.DATABASE_URL);
 const dataSourcePath = path.resolve(__dirname, 'data-source.ts');
 
 try {
-  execSync(`npx typeorm-ts-node-commonjs -d ${dataSourcePath} migration:run`, {
+  execSync(`npx typeorm-ts-node-commonjs -d "${dataSourcePath}" migration:run`, {
     stdio: 'inherit',
     env,
   });
