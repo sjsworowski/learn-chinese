@@ -24,8 +24,5 @@
   "workspaces": [
     "frontend",
     "backend"
-  ],
-  "dependencies": {
-    "@google-cloud/text-to-speech": "^6.2.0"
-  }
+  ]
 }

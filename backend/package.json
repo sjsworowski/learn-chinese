@@ -14,6 +14,7 @@
         "migration:run:local": "cross-env POSTGRES_HOST=localhost POSTGRES_PORT=5432 POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=postgres node run-migration.js"
     },
     "dependencies": {
+        "@google-cloud/text-to-speech": "^6.2.0",
         "@nestjs/common": "^10.0.0",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^10.0.0",
