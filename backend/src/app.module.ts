@@ -14,6 +14,8 @@ import { TestSession } from './entities/test-session.entity';
 import { UserActivity } from './entities/user-activity.entity';
 import { HealthController } from './health.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TtsController } from './tts/tts.controller';
+import { TtsService } from './tts/tts.service';
 
 @Module({
   imports: [
@@ -78,6 +80,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     StatsModule,
     SessionProgressModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, TtsController],
+  providers: [TtsService],
 })
 export class AppModule {}

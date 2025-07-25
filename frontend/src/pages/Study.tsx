@@ -289,15 +289,21 @@ const Study = () => {
         }
     }
 
-    const playAudio = () => {
-        if (currentWord && 'speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(currentWord.chinese);
-            utterance.lang = 'zh-CN';
-            utterance.rate = 0.8;
-            utterance.pitch = 1;
-            speechSynthesis.speak(utterance);
-        } else {
-            toast.error('Speech synthesis not supported in this browser');
+    const playAudio = async () => {
+        if (!currentWord) return;
+        try {
+            const response = await fetch(`${API_BASE}/tts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: currentWord.chinese }),
+            });
+            if (!response.ok) throw new Error('Failed to fetch audio');
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new window.Audio(audioUrl);
+            audio.play();
+        } catch (error) {
+            toast.error('Failed to play audio. Please try again.');
         }
     }
 
