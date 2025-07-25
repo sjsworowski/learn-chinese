@@ -12,24 +12,25 @@ const Register = () => {
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [rememberMe, setRememberMe] = useState(true);
     const { register } = useAuth()
     const navigate = useNavigate()
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setIsLoading(true)
+        e.preventDefault();
+        setIsLoading(true);
         try {
-            await register(email, username, password)
-            navigate('/')
+            await register(email, username, password, rememberMe);
+            navigate('/');
         } catch (error) {
             // Error handled in AuthContext
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'linear-gradient(135deg, #ddeaff 0%, #f6e3fa 35%, #e6e3fa 70%, #fbeafd 100%)' }}>
+        <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-md mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
                     <div>
@@ -104,6 +105,18 @@ const Register = () => {
                                     )}
                                 </button>
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={e => setRememberMe(e.target.checked)}
+                                    className="mr-2"
+                                />
+                                Remember Me
+                            </label>
                         </div>
 
                         <div>

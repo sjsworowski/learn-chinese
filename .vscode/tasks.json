@@ -2,47 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "start-backend",
-      "type": "shell",
-      "command": "npm",
-      "args": [
-        "run",
-        "start:dev"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/backend"
-      },
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      },
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "typescript",
-        "source": "ts",
-        "applyTo": "closedDocuments",
-        "fileLocation": [
-          "relative",
-          "${workspaceFolder}/backend"
-        ],
-        "pattern": "$tsc",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": {
-            "regexp": "(.*?)"
-          },
-          "endsPattern": {
-            "regexp": "bundle.*"
-          }
-        }
-      }
-    },
-    {
       "label": "start-frontend",
       "type": "shell",
       "command": "npm",
@@ -74,58 +33,24 @@
         "pattern": "$tsc",
         "background": {
           "activeOnStart": true,
-          "beginsPattern": {
-            "regexp": "(.*?)"
-          },
-          "endsPattern": {
-            "regexp": "bundle.*"
-          }
+          "beginsPattern": "vite v\\d+\\.\\d+\\.\\d+ dev server running",
+          "endsPattern": "Local:.*http://localhost:\\d+"
         }
       }
     },
     {
-      "label": "start-full-stack",
-      "dependsOrder": "parallel",
-      "dependsOn": [
-        "start-backend",
-        "start-frontend"
-      ],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      }
-    },
-    {
-      "label": "install-all",
+      "label": "Kill Tasks",
       "type": "shell",
-      "command": "npm",
-      "args": [
-        "run",
-        "install:all"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "new",
-        "showReuseMessage": true,
-        "clear": false
-      }
-    },
-    {
-      "label": "kill-frontend",
-      "type": "shell",
-      "command": "npx kill-port 3000",
+      "command": "echo ${input:terminate}",
       "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
     }
   ]
 }

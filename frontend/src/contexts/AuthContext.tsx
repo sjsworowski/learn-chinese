@@ -11,8 +11,8 @@ interface User {
 
 interface AuthContextType {
     user: User | null
-    login: (email: string, password: string) => Promise<void>
-    register: (email: string, username: string, password: string) => Promise<void>
+    login: (email: string, password: string, rememberMe?: boolean) => Promise<void>
+    register: (email: string, username: string, password: string, rememberMe?: boolean) => Promise<void>
     logout: () => void
     isLoading: boolean
 }
@@ -30,6 +30,16 @@ export const useAuth = () => {
 interface AuthProviderProps {
     children: ReactNode
 }
+
+const setStoredToken = (token: string, remember: boolean) => {
+    if (remember) {
+        localStorage.setItem('token', token);
+        sessionStorage.removeItem('token');
+    } else {
+        sessionStorage.setItem('token', token);
+        localStorage.removeItem('token');
+    }
+};
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null)
@@ -58,17 +68,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     }
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, rememberMe?: boolean) => {
         try {
             console.log('Attempting login with:', email)
             const API_BASE = import.meta.env.VITE_API_URL;
-            const response = await axios.post(`${API_BASE}/auth/login`, { email, password })
-            const { access_token, user } = response.data
+            const response = await axios.post(`${API_BASE}/auth/login`, { email, password, rememberMe });
+            const { access_token, user } = response.data;
 
-            localStorage.setItem('token', access_token)
-            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-            setUser(user)
-            toast.success('Login successful!')
+            setStoredToken(access_token, rememberMe ?? true);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            await checkAuth();
+            toast.success('Login successful!');
         } catch (error: any) {
             console.log('Login error:', error)
             toast.error(error.response?.data?.message || 'Login failed')
@@ -76,18 +86,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     }
 
-    const register = async (email: string, username: string, password: string) => {
+    const register = async (email: string, username: string, password: string, rememberMe?: boolean) => {
         try {
             const API_BASE = import.meta.env.VITE_API_URL;
-            const response = await axios.post(`${API_BASE}/auth/register`, { email, username, password })
-            const { access_token, user } = response.data
-            localStorage.setItem('token', access_token)
-            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
-            setUser(user)
-            toast.success('Registration successful!')
+            const response = await axios.post(`${API_BASE}/auth/register`, { email, username, password, rememberMe });
+            const { access_token, user } = response.data;
+            setStoredToken(access_token, rememberMe ?? true);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+            setUser(user);
+            toast.success('Registration successful!');
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Registration failed')
-            throw error
+            toast.error(error.response?.data?.message || 'Registration failed');
+            throw error;
         }
     }
 

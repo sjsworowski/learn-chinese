@@ -10,13 +10,14 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false)
     const { login } = useAuth()
     const navigate = useNavigate()
+    const [rememberMe, setRememberMe] = useState(true); // default to true
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
 
         try {
-            await login(email, password)
+            await login(email, password, rememberMe);
             navigate('/')
         } catch (error) {
             // Error is handled in AuthContext
@@ -26,7 +27,7 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'linear-gradient(135deg, #ddeaff 0%, #f6e3fa 35%, #e6e3fa 70%, #fbeafd 100%)' }}>
+        <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-md mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
                     <div>
@@ -113,6 +114,15 @@ const Login = () => {
                                 </button>
                             </p>
                         </div>
+                        <label className="flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={e => setRememberMe(e.target.checked)}
+                                className="mr-2"
+                            />
+                            Remember Me
+                        </label>
                     </form>
                 </div>
             </div>

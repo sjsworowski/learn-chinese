@@ -9,12 +9,12 @@ export class AuthController {
     constructor(private authService: AuthService) { }
 
     @Post('login')
-    async login(@Body() loginDto: { email: string; password: string }) {
+    async login(@Body() loginDto: { email: string; password: string; rememberMe?: boolean }) {
         const user = await this.authService.validateUser(loginDto.email, loginDto.password);
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
         }
-        return this.authService.login(user);
+        return this.authService.login(user, loginDto.rememberMe);
     }
 
     @Post('register')
@@ -24,12 +24,21 @@ export class AuthController {
             registerDto.username,
             registerDto.password,
         );
-        return this.authService.login(user);
+        // Always use default expiry (1d) after registration
+        return this.authService.login(user, false);
     }
 
     @UseGuards(JwtAuthGuard)
     @Get('me')
-    getProfile(@Request() req) {
-        return req.user;
+    async getProfile(@Request() req) {
+        const user = await this.authService.findById(req.user.userId);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+        return {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+        };
     }
 } 

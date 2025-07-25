@@ -23,29 +23,11 @@
       "name": "Launch Frontend",
       "type": "chrome",
       "request": "launch",
+      "preLaunchTask": "start-frontend",
       "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}/frontend/src",
       "sourceMaps": true,
-      "preLaunchTask": "start-frontend",
-    },
-    {
-      "name": "Launch Full Stack",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/backend/src/main.ts",
-      "runtimeArgs": [
-        "-r",
-        "ts-node/register"
-      ],
-      "cwd": "${workspaceFolder}/backend",
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "console": "integratedTerminal",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "preLaunchTask": "start-frontend",
+      "postDebugTask": "Kill Tasks",
     }
   ],
   "compounds": [
@@ -54,7 +36,8 @@
       "configurations": [
         "Launch Backend",
         "Launch Frontend"
-      ]
+      ],
+      "stopAll": true,
     }
   ]
 }

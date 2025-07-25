@@ -155,7 +155,7 @@ const PinyinTest = () => {
 
     if (completed) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'linear-gradient(135deg, #ddeaff 0%, #f6e3fa 35%, #e6e3fa 70%, #fbeafd 100%)' }}>
+            <div className="min-h-screen flex flex-col items-center justify-center">
                 <div className="w-full max-w-md mx-auto p-6">
                     <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
                         <h2 className="text-2xl font-bold mb-4">🎉 Pinyin Test Complete!</h2>
@@ -170,7 +170,7 @@ const PinyinTest = () => {
     const word = words[currentIdx];
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'linear-gradient(135deg, #ddeaff 0%, #f6e3fa 35%, #e6e3fa 70%, #fbeafd 100%)' }}>
+        <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-2xl mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
                     {/* Improved Timer at the top */}

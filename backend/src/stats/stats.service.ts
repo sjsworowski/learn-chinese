@@ -49,7 +49,28 @@ export class StatsService {
         const activityLogs = await this.userActivityRepository.find({ where: { userId } });
         const totalStudyTime = activityLogs.reduce((sum, log) => sum + (log.duration || 0), 0);
 
-        const currentStreak = 1;
+        // Calculate current streak: consecutive days with at least one 'study' activity, up to today
+        const studyActivities = activityLogs
+            .filter(log => log.type === 'study')
+            .map(log => new Date(log.createdAt));
+
+        // Get unique days (YYYY-MM-DD) with study activity
+        const daysSet = new Set(studyActivities.map(date => date.toISOString().slice(0, 10)));
+        const daysArr = Array.from(daysSet).sort().reverse(); // descending order
+
+        let streak = 0;
+        let currentDate = new Date();
+        for (; ;) {
+            const ymd = currentDate.toISOString().slice(0, 10);
+            if (daysSet.has(ymd)) {
+                streak++;
+                // Move to previous day
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        const currentStreak = streak;
 
         // Count tests completed
         const testsCompleted = await this.testSessionRepository.count({ where: { userId } });

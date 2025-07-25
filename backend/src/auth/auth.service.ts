@@ -15,17 +15,24 @@ export class AuthService {
 
     async validateUser(email: string, password: string): Promise<any> {
         const user = await this.userRepository.findOne({ where: { email } });
-        if (user && await bcrypt.compare(password, user.password)) {
-            const { password, ...result } = user;
-            return result;
+        console.log('Login attempt:', email, password);
+        if (user) {
+            console.log('User found:', user.email, user.password);
+            const match = await bcrypt.compare(password, user.password);
+            console.log('Password match:', match);
+            if (match) {
+                const { password, ...result } = user;
+                return result;
+            }
         }
         return null;
     }
 
-    async login(user: any) {
+    async login(user: any, rememberMe?: boolean) {
         const payload = { email: user.email, sub: user.id };
+        const expiresIn = rememberMe ? '30d' : '1d';
         return {
-            access_token: this.jwtService.sign(payload),
+            access_token: this.jwtService.sign(payload, { expiresIn }),
             user: {
                 id: user.id,
                 email: user.email,

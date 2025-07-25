@@ -23,6 +23,15 @@ export default {
             fontFamily: {
                 'chinese': ['Noto Sans SC', 'sans-serif'],
             },
+            keyframes: {
+                'pulse-grow': {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.08)' },
+                },
+            },
+            animation: {
+                'pulse-grow': 'pulse-grow 3.5s ease-in-out infinite',
+            }
         },
     },
     plugins: [],
