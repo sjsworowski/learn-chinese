@@ -16,6 +16,8 @@ import { HealthController } from './health.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TtsController } from './tts/tts.controller';
 import { TtsService } from './tts/tts.service';
+import { TtsModule } from './tts/tts.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -32,37 +34,37 @@ import { TtsService } from './tts/tts.service';
 
         return isCloud
           ? {
-              type: 'postgres',
-              url: config.get<string>('DATABASE_URL'),
-              ssl: { rejectUnauthorized: false },
-              entities: [
-                User,
-                UserProgress,
-                SessionProgress,
-                Vocabulary,
-                TestSession,
-                UserActivity,
-              ],
-              synchronize: false,
-            }
+            type: 'postgres',
+            url: config.get<string>('DATABASE_URL'),
+            ssl: { rejectUnauthorized: false },
+            entities: [
+              User,
+              UserProgress,
+              SessionProgress,
+              Vocabulary,
+              TestSession,
+              UserActivity,
+            ],
+            synchronize: false,
+          }
           : {
-              type: 'postgres',
-              host: config.get<string>('POSTGRES_HOST', 'localhost'),
-              port: parseInt(config.get<string>('POSTGRES_PORT', '5432'), 10),
-              username: config.get<string>('POSTGRES_USER', 'postgres'),
-              password: config.get<string>('POSTGRES_PASSWORD', 'postgres'),
-              database: config.get<string>('POSTGRES_DB', 'postgres'),
-              ssl: false,
-              entities: [
-                User,
-                UserProgress,
-                SessionProgress,
-                Vocabulary,
-                TestSession,
-                UserActivity,
-              ],
-              synchronize: false,
-            };
+            type: 'postgres',
+            host: config.get<string>('POSTGRES_HOST', 'localhost'),
+            port: parseInt(config.get<string>('POSTGRES_PORT', '5432'), 10),
+            username: config.get<string>('POSTGRES_USER', 'postgres'),
+            password: config.get<string>('POSTGRES_PASSWORD', 'postgres'),
+            database: config.get<string>('POSTGRES_DB', 'postgres'),
+            ssl: false,
+            entities: [
+              User,
+              UserProgress,
+              SessionProgress,
+              Vocabulary,
+              TestSession,
+              UserActivity,
+            ],
+            synchronize: false,
+          };
       },
     }),
 
@@ -77,10 +79,14 @@ import { TtsService } from './tts/tts.service';
     PassportModule,
     AuthModule,
     VocabularyModule,
+    TtsModule,
     StatsModule,
     SessionProgressModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 1 minute
+      limit: 10, // 10 requests per minute
+    }]),
   ],
-  controllers: [HealthController, TtsController],
-  providers: [TtsService],
+  controllers: [HealthController]
 })
-export class AppModule {}
+export class AppModule { }
