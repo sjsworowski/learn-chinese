@@ -331,7 +331,7 @@ const Dashboard = () => {
                                                             >
                                                                 <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-15 py-3 flex flex-col items-center min-w-[180px] relative">
                                                                     <button
-                                                                        className="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
+                                                                        className="px-4 py-2 mx-4 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
                                                                         onClick={e => {
                                                                             ignoreNextOutsideClick.current = true;
                                                                             setHoveredStepIdx(null);

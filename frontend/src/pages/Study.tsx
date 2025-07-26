@@ -378,7 +378,7 @@ const Study = () => {
         }
 
         return (
-            <div className="flex-1 flex flex-col items-center justify-center">
+            <div className="min-h-screen flex-1 flex flex-col items-center justify-center">
                 <div className="w-full max-w-md mx-auto p-6">
                     <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
                         <div className="mb-6">
@@ -462,9 +462,9 @@ const Study = () => {
 
                         <button
                             onClick={handleNext}
-                            className="rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition px-8 py-2"
+                            className="rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition px-4 py-2"
                         >
-                            {isLastWord ? 'Complete Session' : 'Next'}
+                            {isLastWord ? 'Complete' : 'Next'}
                         </button>
                     </div>
                 </div>

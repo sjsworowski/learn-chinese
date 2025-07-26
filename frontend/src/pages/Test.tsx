@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -20,6 +20,17 @@ const pickRandom = (arr: any[], n: number) => {
 
 const stripParens = (str: string) => str.replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
 
+// Add this function to normalize apostrophes and quotes
+const normalizeQuotes = (str: string) => {
+    return str
+        .replace(/[''′]/g, "'") // Replace smart quotes with regular apostrophe
+        .replace(/[""″]/g, '"') // Replace smart quotes with regular quote
+        .replace(/\u2019/g, "'") // Right single quotation mark
+        .replace(/\u2018/g, "'") // Left single quotation mark
+        .replace(/\u201D/g, '"') // Right double quotation mark
+        .replace(/\u201C/g, '"'); // Left double quotation mark
+};
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Test = () => {
@@ -33,6 +44,7 @@ const Test = () => {
     const [loading, setLoading] = useState(true);
     const [testStartTime] = useState(Date.now());
     const [testDuration, setTestDuration] = useState(0);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -43,6 +55,22 @@ const Test = () => {
         }
         return () => clearInterval(timer);
     }, [completed, loading, testStartTime]);
+
+    // Add auto-focus when test starts
+    useEffect(() => {
+        if (!loading && !completed && inputRef.current) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+        }
+    }, [loading, completed]);
+
+    // Add auto-focus when moving to next question
+    useEffect(() => {
+        if (!loading && !completed && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [currentIdx, loading, completed]);
 
     const logTestTime = async () => {
         try {
@@ -98,7 +126,7 @@ const Test = () => {
             .split(';')
             .map(s => stripParens(s).trim().toLowerCase())
             .filter(Boolean);
-        const userAnswer = stripParens(answer).toLowerCase();
+        const userAnswer = normalizeQuotes(stripParens(answer)).toLowerCase();
         const correct = possibleAnswers.includes(userAnswer);
         if (correct) {
             setFeedback('correct');
@@ -125,18 +153,25 @@ const Test = () => {
     // Clear feedback on input change if previously incorrect
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (feedback === 'incorrect') setFeedback(null);
-        setAnswer(e.target.value);
+        const normalizedValue = normalizeQuotes(e.target.value);
+        setAnswer(normalizedValue);
     };
 
-    const playAudio = () => {
-        if (word && 'speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(word.chinese);
-            utterance.lang = 'zh-CN';
-            utterance.rate = 0.8;
-            utterance.pitch = 1;
-            speechSynthesis.speak(utterance);
-        } else {
-            toast.error('Speech synthesis not supported in this browser');
+    const playAudio = async () => {
+        if (!word) return;
+        try {
+            const response = await fetch(`${API_BASE}/tts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: word.chinese }),
+            });
+            if (!response.ok) throw new Error('Failed to fetch audio');
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new window.Audio(audioUrl);
+            audio.play();
+        } catch (error) {
+            toast.error('Failed to play audio. Please try again.');
         }
     };
 
@@ -168,7 +203,7 @@ const Test = () => {
     const word = words[currentIdx];
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="min-h-screen flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-2xl mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
                     {/* Improved Timer at the top */}
@@ -197,6 +232,7 @@ const Test = () => {
                     </div>
                     <form onSubmit={handleSubmit}>
                         <input
+                            ref={inputRef}
                             type="text"
                             className="w-full border rounded px-3 py-2 mb-2"
                             placeholder="Enter English translation"

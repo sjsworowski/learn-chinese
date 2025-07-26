@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -49,6 +49,7 @@ const PinyinTest = () => {
     const [loading, setLoading] = useState(true);
     const [testStartTime] = useState(Date.now());
     const [testDuration, setTestDuration] = useState(0);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -59,6 +60,22 @@ const PinyinTest = () => {
         }
         return () => clearInterval(timer);
     }, [completed, loading, testStartTime]);
+
+    // Add auto-focus when test starts
+    useEffect(() => {
+        if (!loading && !completed && inputRef.current) {
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+        }
+    }, [loading, completed]);
+
+    // Add auto-focus when moving to next question
+    useEffect(() => {
+        if (!loading && !completed && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [currentIdx, loading, completed]);
 
     const logTestTime = async () => {
         try {
@@ -170,7 +187,7 @@ const PinyinTest = () => {
     const word = words[currentIdx];
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center">
+        <div className="min-h-screen flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-2xl mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
                     {/* Improved Timer at the top */}
@@ -190,6 +207,7 @@ const PinyinTest = () => {
                     </div>
                     <form onSubmit={handleSubmit}>
                         <input
+                            ref={inputRef}
                             type="text"
                             className="w-full border rounded px-3 py-2 mb-2"
                             placeholder="Enter pinyin (e.g., nihao) - accents and spaces optional"
