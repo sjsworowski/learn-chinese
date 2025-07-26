@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Clock, Volume2 } from 'lucide-react';
+import { Clock, Volume2, Check, X } from 'lucide-react';
 
 interface VocabWord {
     id: string;
@@ -31,6 +31,14 @@ const normalizeQuotes = (str: string) => {
         .replace(/\u201C/g, '"'); // Left double quotation mark
 };
 
+// Add this function to strip special characters
+const stripSpecialChars = (str: string) => {
+    return str
+        .replace(/[?!.,;:]/g, '') // Remove common punctuation
+        .replace(/\s+/g, ' ') // Normalize spaces
+        .trim();
+};
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Test = () => {
@@ -40,6 +48,7 @@ const Test = () => {
     const [currentIdx, setCurrentIdx] = useState(0);
     const [answer, setAnswer] = useState('');
     const [feedback, setFeedback] = useState<string | null>(null);
+    const [feedbackOpacity, setFeedbackOpacity] = useState(1);
     const [completed, setCompleted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [testStartTime] = useState(Date.now());
@@ -124,12 +133,13 @@ const Test = () => {
         e.preventDefault();
         const possibleAnswers = words[currentIdx].english
             .split(';')
-            .map(s => stripParens(s).trim().toLowerCase())
+            .map(s => stripSpecialChars(stripParens(s).trim().toLowerCase()))
             .filter(Boolean);
-        const userAnswer = normalizeQuotes(stripParens(answer)).toLowerCase();
+        const userAnswer = normalizeQuotes(stripSpecialChars(stripParens(answer))).toLowerCase();
         const correct = possibleAnswers.includes(userAnswer);
         if (correct) {
             setFeedback('correct');
+            setFeedbackOpacity(1);
             setTimeout(async () => {
                 setFeedback(null);
                 setAnswer('');
@@ -147,6 +157,13 @@ const Test = () => {
             }, 800);
         } else {
             setFeedback('incorrect');
+            setFeedbackOpacity(1);
+            setTimeout(() => {
+                setFeedbackOpacity(0);
+                setTimeout(() => {
+                    setFeedback(null);
+                }, 300);
+            }, 700);
         }
     };
 
@@ -206,16 +223,8 @@ const Test = () => {
         <div className="min-h-screen flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-2xl mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
-                    {/* Improved Timer at the top */}
-                    <div className="mb-4 flex justify-center">
-                        <span className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-500 rounded-full px-3 py-0.5 font-mono text-base font-normal shadow-sm" style={{ letterSpacing: '0.05em' }}>
-                            <Clock className="w-4 h-4 opacity-70" />
-                            {formatTime(testDuration)}
-                        </span>
-                    </div>
                     <div className="mb-6 text-center">
-                        <h2 className="text-xl font-bold mb-2">Test Your Knowledge</h2>
-                        <div className="text-gray-600 mb-1">Word {currentIdx + 1} of {words.length}</div>
+                        <h2 className="text-xl text-gray-600 mb-2">Test Your Knowledge</h2>
                     </div>
                     <div className="flex flex-col items-center mb-6">
                         <div className="flex items-center gap-4 mb-2">
@@ -241,16 +250,39 @@ const Test = () => {
                             disabled={feedback === 'correct'}
                             autoFocus
                         />
-                        {feedback === 'correct' && <div className="text-green-600 mb-2">Correct!</div>}
-                        {feedback === 'incorrect' && (
-                            <div className="text-red-600 mb-2">Incorrect. Try again.</div>
-                        )}
                         <button type="submit" className="rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition px-8 py-2 w-full" disabled={!!feedback || !answer.trim()}>
                             {currentIdx === words.length - 1 ? 'Finish' : 'Next'}
                         </button>
                     </form>
+                    <div className="mt-6">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                                className="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                style={{ width: `${((currentIdx + 1) / words.length) * 100}%` }}
+                            ></div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Centered Feedback Overlay */}
+            {feedback && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                    <div className={`transform ${feedback === 'correct' ? 'scale-100 opacity-100' : `scale-100 opacity-${feedbackOpacity * 100} transition-all duration-500 ease-out`
+                        }`}>
+                        {feedback === 'correct' && (
+                            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center shadow-2xl animate-bounce">
+                                <Check className="w-12 h-12 text-green-600" />
+                            </div>
+                        )}
+                        {feedback === 'incorrect' && (
+                            <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center shadow-2xl animate-bounce">
+                                <X className="w-12 h-12 text-red-600" />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

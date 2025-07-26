@@ -391,10 +391,6 @@ const Study = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-600">{sessionWords.length}</div>
-                                <div className="text-sm text-gray-600">Words in Session</div>
-                            </div>
-                            <div className="text-center">
                                 <div className="text-2xl font-bold text-green-600">{sessionWords.filter(w => w.isLearned).length}</div>
                                 <div className="text-sm text-gray-600">Words Learned</div>
                             </div>
@@ -426,13 +422,6 @@ const Study = () => {
         <div className="min-h-screen flex flex-col items-center justify-center">
             <div className="w-full max-w-3xl mx-auto p-6">
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
-                    {/* Improved Timer at the top */}
-                    <div className="mb-6 flex justify-center">
-                        <span className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-500 rounded-full px-3 py-0.5 font-mono text-base font-normal shadow-sm" style={{ letterSpacing: '0.05em' }}>
-                            <Clock className="w-4 h-4 opacity-70" />
-                            {formatTime(studySession.sessionTime)}
-                        </span>
-                    </div>
                     {/* Word display without image */}
                     {currentWord && (
                         <div className="flex flex-col items-center mb-10">
@@ -466,6 +455,16 @@ const Study = () => {
                         >
                             {isLastWord ? 'Complete' : 'Next'}
                         </button>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-6">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                                className="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                style={{ width: `${((currentIndex + 1) / sessionWords.length) * 100}%` }}
+                            ></div>
+                        </div>
                     </div>
                 </div>
             </div>
