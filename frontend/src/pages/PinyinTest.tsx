@@ -216,6 +216,10 @@ const PinyinTest = () => {
                             onChange={handleInputChange}
                             disabled={feedback === 'correct'}
                             autoFocus
+                            autoComplete="off"
+                            spellCheck="false"
+                            autoCorrect="off"
+                            autoCapitalize="off"
                         />
                         <button type="submit" className="rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition px-8 py-2 w-full" disabled={!!feedback || !answer.trim()}>
                             {currentIdx === words.length - 1 ? 'Finish' : 'Next'}

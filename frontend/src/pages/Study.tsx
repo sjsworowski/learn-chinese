@@ -292,9 +292,13 @@ const Study = () => {
     const playAudio = async () => {
         if (!currentWord) return;
         try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE}/tts`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ text: currentWord.chinese }),
             });
             if (!response.ok) throw new Error('Failed to fetch audio');
