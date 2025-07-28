@@ -34,9 +34,9 @@ const normalizeQuotes = (str: string) => {
 // Add this function to strip special characters
 const stripSpecialChars = (str: string) => {
     return str
-        .replace(/[?!.,;:]/g, '') // Remove common punctuation
+        .replace(/[?!.,;:']/g, '') // Remove common punctuation
         .replace(/\s+/g, ' ') // Normalize spaces
-        .trim();
+        .trim(); // This already removes leading/trailing spaces
 };
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -133,9 +133,9 @@ const Test = () => {
         e.preventDefault();
         const possibleAnswers = words[currentIdx].english
             .split(';')
-            .map(s => stripSpecialChars(stripParens(s).trim().toLowerCase()))
+            .map(s => normalizeQuotes(stripSpecialChars(stripParens(s).trim())).toLowerCase())
             .filter(Boolean);
-        const userAnswer = normalizeQuotes(stripSpecialChars(stripParens(answer))).toLowerCase();
+        const userAnswer = normalizeQuotes(stripSpecialChars(stripParens(answer).trim())).toLowerCase();
         const correct = possibleAnswers.includes(userAnswer);
         if (correct) {
             setFeedback('correct');
