@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config(); // Load .env file first
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
@@ -11,6 +14,9 @@ const logger = new Logger('HTTP');
 async function bootstrap() {
     console.log('DATABASE_URL:', process.env.DATABASE_URL);
     const app = await NestFactory.create(AppModule);
+
+    const appJwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+    console.log('🔐 Main JWT_SECRET:', appJwtSecret);
 
     app.use(helmet());
 

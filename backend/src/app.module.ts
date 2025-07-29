@@ -19,6 +19,9 @@ import { TtsService } from './tts/tts.service';
 import { TtsModule } from './tts/tts.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
+const appJwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
+
 @Module({
   imports: [
     // Load environment variables from .env
@@ -71,7 +74,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET', 'fallback-secret'),
+        secret: config.get<string>('JWT_SECRET', 'your-secret-key'),
         signOptions: { expiresIn: '7d' },
       }),
     }),

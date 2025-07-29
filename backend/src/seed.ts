@@ -6,7 +6,6 @@ import { SessionProgress } from './entities/session-progress.entity';
 import { TestSession } from './entities/test-session.entity';
 import { UserActivity } from './entities/user-activity.entity';
 import { seedDatabaseIfNeeded } from './seed-util';
-import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
 import * as path from 'path';
 

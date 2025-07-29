@@ -1,15 +1,15 @@
-import React from 'react'
+﻿import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
 import Login from './pages/Login'
-import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Study from './pages/Study'
 import ProtectedRoute from './components/ProtectedRoute'
 import Test from './pages/Test'
 import PinyinTest from './pages/PinyinTest'
 import Profile from './pages/Profile'
+import MagicLinkVerify from './pages/MagicLinkVerify'
 
 function App() {
     return (
@@ -19,7 +19,7 @@ function App() {
                 <main className="flex-grow flex-1">
                     <Routes>
                         <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
+                        <Route path="/auth/verify" element={<MagicLinkVerify />} />
                         <Route path="/" element={
                             <ProtectedRoute>
                                 <Dashboard />
