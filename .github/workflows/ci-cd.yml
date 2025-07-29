@@ -64,7 +64,7 @@ jobs:
             --platform=managed \
             --region=europe-west2 \
             --allow-unauthenticated \
-            --set-env-vars=JWT_SECRET=${{ secrets.JWT_SECRET }},DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }} \
+            --set-env-vars=JWT_SECRET=${{ secrets.JWT_SECRET }},DATABASE_URL=${{ secrets.SUPABASE_DATABASE_URL }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }},FRONTEND_URL=${{ secrets.FRONTEND_URL }},NODE_ENV=production \
             --quiet
         env:
           GCLOUD_PROJECT: ${{ secrets.GCLOUD_PROJECT }}
