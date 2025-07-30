@@ -3,7 +3,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Clock, Volume2, Check, X } from 'lucide-react';
+import { Clock, Volume2, Check, X, Lightbulb } from 'lucide-react';
+import Confetti from '../components/Confetti';
 
 interface VocabWord {
     id: string;
@@ -14,7 +15,7 @@ interface VocabWord {
 }
 
 const pickRandom = (arr: any[], n: number) => {
-    const shuffled = arr.slice().sort(() => 0.5 - Math.random());
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, n);
 };
 
@@ -39,6 +40,15 @@ const stripSpecialChars = (str: string) => {
         .trim(); // This already removes leading/trailing spaces
 };
 
+// Add this function to create hint text
+const createHint = (text: string) => {
+    const words = text.split(' ');
+    return words.map(word => {
+        if (word.length <= 1) return word;
+        return word.charAt(0) + '•'.repeat(word.length - 1);
+    }).join(' ');
+};
+
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Test = () => {
@@ -54,6 +64,12 @@ const Test = () => {
     const [testStartTime] = useState(Date.now());
     const [testDuration, setTestDuration] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    // Add hint-related state
+    const [incorrectAttempts, setIncorrectAttempts] = useState(0);
+    const [showHint, setShowHint] = useState(false);
+    const [hintText, setHintText] = useState('');
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -77,9 +93,18 @@ const Test = () => {
     // Add auto-focus when moving to next question
     useEffect(() => {
         if (!loading && !completed && inputRef.current) {
-            inputRef.current.focus();
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
         }
     }, [currentIdx, loading, completed]);
+
+    // Reset hint state when moving to next question
+    useEffect(() => {
+        setIncorrectAttempts(0);
+        setShowHint(false);
+        setHintText('');
+    }, [currentIdx]);
 
     const logTestTime = async () => {
         try {
@@ -137,6 +162,7 @@ const Test = () => {
             .filter(Boolean);
         const userAnswer = normalizeQuotes(stripSpecialChars(stripParens(answer).trim())).toLowerCase();
         const correct = possibleAnswers.includes(userAnswer);
+
         if (correct) {
             setFeedback('correct');
             setFeedbackOpacity(1);
@@ -151,6 +177,7 @@ const Test = () => {
                         console.error('Failed to record test completion or log test time', e);
                     }
                     setCompleted(true);
+                    setShowConfetti(true);
                 } else {
                     setCurrentIdx(idx => idx + 1);
                 }
@@ -158,6 +185,14 @@ const Test = () => {
         } else {
             setFeedback('incorrect');
             setFeedbackOpacity(1);
+            setIncorrectAttempts(prev => prev + 1);
+
+            // Show hint after 3 incorrect attempts
+            if (incorrectAttempts === 2) { // This will be the 3rd attempt
+                const firstAnswer = possibleAnswers[0]; // Use the first answer for hint
+                setHintText(createHint(firstAnswer));
+            }
+
             setTimeout(() => {
                 setFeedbackOpacity(0);
                 setTimeout(() => {
@@ -172,6 +207,10 @@ const Test = () => {
         if (feedback === 'incorrect') setFeedback(null);
         const normalizedValue = normalizeQuotes(e.target.value);
         setAnswer(normalizedValue);
+    };
+
+    const handleShowHint = () => {
+        setShowHint(true);
     };
 
     const playAudio = async () => {
@@ -210,6 +249,7 @@ const Test = () => {
     if (completed) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
+                {showConfetti && <Confetti />}
                 <div className="w-full max-w-md mx-auto p-6">
                     <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
                         <h2 className="text-2xl font-bold mb-4">🎉 Test Complete!</h2>
@@ -262,6 +302,25 @@ const Test = () => {
                             {currentIdx === words.length - 1 ? 'Finish' : 'Next'}
                         </button>
                     </form>
+                    {/* Hint Section */}
+                    {incorrectAttempts >= 3 && !showHint && (
+                        <div className="mt-4 text-center">
+                            <button
+                                onClick={handleShowHint}
+                                className="flex items-center gap-2 mx-auto px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+                            >
+                                <Lightbulb className="w-4 h-4" />
+                                <span>Need a hint?</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {showHint && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                            <p className="text-sm text-blue-600 mb-1">Hint:</p>
+                            <p className="text-lg font-mono text-blue-800">{hintText}</p>
+                        </div>
+                    )}
                     <div className="mt-6">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                             <div

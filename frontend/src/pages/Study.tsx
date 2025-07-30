@@ -393,7 +393,7 @@ const Study = () => {
                             <p className="text-gray-600">Great job! You've completed session {currentSession + 1}.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-8">
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-green-600">{sessionWords.filter(w => w.isLearned).length}</div>
                                 <div className="text-sm text-gray-600">Words Learned</div>
