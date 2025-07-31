@@ -18,7 +18,21 @@ export class StatsController {
     }
 
     @Post('test-completed')
+    @UseGuards(JwtAuthGuard)
     async recordTestCompleted(@Request() req) {
         return this.statsService.recordTestCompleted(req.user.userId);
+    }
+
+    @Post('speed-challenge')
+    @UseGuards(JwtAuthGuard)
+    async recordSpeedChallenge(@Request() req, @Body() body: { score: number; timeUsed: number }) {
+        return this.statsService.recordSpeedChallenge(req.user.userId, body);
+    }
+
+    @Get('speed-challenge/high-score')
+    @UseGuards(JwtAuthGuard)
+    async getSpeedChallengeHighScore(@Request() req) {
+        const highScore = await this.statsService.getSpeedChallengeHighScore(req.user.userId);
+        return { highScore };
     }
 } 

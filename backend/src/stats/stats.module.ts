@@ -6,6 +6,7 @@ import { UserProgress } from '../entities/user-progress.entity';
 import { Vocabulary } from '../entities/vocabulary.entity';
 import { TestSession } from '../entities/test-session.entity';
 import { UserActivity } from '../entities/user-activity.entity';
+import { SpeedChallengeScore } from '../entities/speed-challenge-score.entity';
 import { SessionProgressModule } from '../session-progress/session-progress.module';
 import { SessionProgressService } from '../session-progress/session-progress.service';
 
@@ -14,7 +15,8 @@ import { SessionProgressService } from '../session-progress/session-progress.ser
         UserProgress,
         Vocabulary,
         TestSession,
-        UserActivity
+        UserActivity,
+        SpeedChallengeScore
     ]), SessionProgressModule],
     controllers: [StatsController],
     providers: [StatsService, SessionProgressService],

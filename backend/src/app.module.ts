@@ -12,6 +12,7 @@ import { UserProgress } from './entities/user-progress.entity';
 import { SessionProgress } from './entities/session-progress.entity';
 import { TestSession } from './entities/test-session.entity';
 import { UserActivity } from './entities/user-activity.entity';
+import { SpeedChallengeScore } from './entities/speed-challenge-score.entity';
 import { HealthController } from './health.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TtsController } from './tts/tts.controller';
@@ -47,6 +48,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
               Vocabulary,
               TestSession,
               UserActivity,
+              SpeedChallengeScore,
             ],
             synchronize: false,
           }
@@ -65,6 +67,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
               Vocabulary,
               TestSession,
               UserActivity,
+              SpeedChallengeScore,
             ],
             synchronize: false,
           };

@@ -10,6 +10,7 @@ import Test from './pages/Test'
 import PinyinTest from './pages/PinyinTest'
 import Profile from './pages/Profile'
 import MagicLinkVerify from './pages/MagicLinkVerify'
+import SpeedChallenge from './pages/SpeedChallenge';
 
 function App() {
     return (
@@ -20,6 +21,11 @@ function App() {
                     <Routes>
                         <Route path="/login" element={<Login />} />
                         <Route path="/auth/verify" element={<MagicLinkVerify />} />
+                        <Route path="/speed-challenge" element={
+                            <ProtectedRoute>
+                                <SpeedChallenge />
+                            </ProtectedRoute>
+                        } />
                         <Route path="/" element={
                             <ProtectedRoute>
                                 <Dashboard />

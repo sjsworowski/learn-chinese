@@ -5,6 +5,7 @@ import { UserProgress } from '../entities/user-progress.entity';
 import { Vocabulary } from '../entities/vocabulary.entity';
 import { TestSession } from '../entities/test-session.entity';
 import { UserActivity } from '../entities/user-activity.entity';
+import { SpeedChallengeScore } from '../entities/speed-challenge-score.entity';
 import { SessionProgressService } from '../session-progress/session-progress.service';
 
 @Injectable()
@@ -18,7 +19,9 @@ export class StatsService {
         private testSessionRepository: Repository<TestSession>,
         @InjectRepository(UserActivity)
         private userActivityRepository: Repository<UserActivity>,
-        private sessionProgressService: SessionProgressService // <-- inject here
+        @InjectRepository(SpeedChallengeScore)
+        private speedChallengeScoreRepository: Repository<SpeedChallengeScore>,
+        private sessionProgressService: SessionProgressService
     ) { }
 
     async getStatsForUser(userId: string) {
@@ -107,5 +110,29 @@ export class StatsService {
             currentSession: (sessionProgress.currentSession || 0) + 1
         });
         return { success: true };
+    }
+
+    async recordSpeedChallenge(userId: string, data: { score: number; timeUsed: number }) {
+        // Save the score to the database
+        const scoreRecord = this.speedChallengeScoreRepository.create({
+            userId,
+            score: data.score,
+            timeUsed: data.timeUsed
+        });
+        await this.speedChallengeScoreRepository.save(scoreRecord);
+
+        console.log(`Speed Challenge Score: ${data.score} in ${data.timeUsed}s for user ${userId}`);
+        return { success: true, score: data.score };
+    }
+
+    async getSpeedChallengeHighScore(userId: string) {
+        const highScore = await this.speedChallengeScoreRepository
+            .createQueryBuilder('score')
+            .where('score.userId = :userId', { userId })
+            .orderBy('score.score', 'DESC')
+            .addOrderBy('score.timeUsed', 'ASC') // If same score, prefer faster time
+            .getOne();
+
+        return highScore ? highScore.score : 0;
     }
 } 

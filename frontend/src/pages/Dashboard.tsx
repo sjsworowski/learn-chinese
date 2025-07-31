@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { CheckCircle, Lock, ArrowRight, BookOpen, LogOut, TrendingUp, Clock, User, Menu } from 'lucide-react';
+import { CheckCircle, Lock, ArrowRight, BookOpen, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages } from 'lucide-react';
 import axios from 'axios'
 import toast from 'react-hot-toast'
 /// <reference types="vite/client" />
@@ -12,6 +12,7 @@ interface LearningStats {
     currentStreak: number;
     totalStudyTime: number;
     testsCompleted?: number;
+    speedChallengeHighScore?: number;
     difficultyCounts?: {
         beginner: { total: number, learned: number },
         intermediate: { total: number, learned: number },
@@ -41,7 +42,8 @@ const Dashboard = () => {
         learnedWords: 0,
         currentStreak: 0,
         totalStudyTime: 0,
-        testsCompleted: 0
+        testsCompleted: 0,
+        speedChallengeHighScore: 0
     })
     const [sessionProgress, setSessionProgress] = useState({
         currentSession: 0,
@@ -117,7 +119,18 @@ const Dashboard = () => {
     const fetchStats = async () => {
         try {
             const response = await axios.get(`${API_BASE}/stats`)
-            setStats(response.data)
+            const statsData = response.data
+
+            // Fetch speed challenge high score
+            try {
+                const highScoreResponse = await axios.get(`${API_BASE}/stats/speed-challenge/high-score`)
+                statsData.speedChallengeHighScore = highScoreResponse.data.highScore
+            } catch (error) {
+                console.error('Failed to fetch speed challenge high score:', error)
+                statsData.speedChallengeHighScore = 0
+            }
+
+            setStats(statsData)
         } catch (error) {
             console.error('Failed to fetch stats from backend:', error)
             toast.error('Failed to fetch stats from backend. Please try again later.')
@@ -362,7 +375,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
                         <div className="bg-white/30 rounded-2xl shadow p-4 flex items-center gap-3">
                             <div className="bg-green-100 rounded-xl p-2 flex items-center justify-center"><CheckCircle className="w-6 h-6 text-green-500" /></div>
                             <div>
@@ -375,6 +388,13 @@ const Dashboard = () => {
                             <div>
                                 <div className="text-gray-900 text-m">Tests Completed</div>
                                 <div className="text-2xl font-bold text-gray-900">{stats.testsCompleted ?? 0}</div>
+                            </div>
+                        </div>
+                        <div className="bg-white/30 rounded-2xl shadow p-4 flex items-center gap-3">
+                            <div className="bg-yellow-100 rounded-xl p-2 flex items-center justify-center"><Zap className="w-6 h-6 text-yellow-600" /></div>
+                            <div>
+                                <div className="text-gray-900 text-m">Speed Challenge</div>
+                                <div className="text-2xl font-bold text-gray-900">{stats.speedChallengeHighScore ?? 0}</div>
                             </div>
                         </div>
                         <div className="bg-white/30 rounded-2xl shadow p-4 flex items-center gap-3">
@@ -410,7 +430,7 @@ const Dashboard = () => {
                                                         ref={el => stepRefs.current[globalIdx] = el}
                                                         className={`rounded-full flex items-center justify-center mb-2 transition-all duration-200 shadow-lg border-4
                                                          ${isCurrent
-                                                                ? `bg-indigo-100 border-indigo-400 cursor-pointer ring-4 ring-indigo-200 w-20 h-20 hover:bg-indigo-200 hover:shadow-2xl hover:scale-110 animate-pulse-grow ${isMobile ? (clickedStepIdx === globalIdx ? 'shadow-2xl scale-110' : ''): (activeTooltipIdx === globalIdx ? 'shadow-2xl scale-110' : '')}`
+                                                                ? `bg-indigo-100 border-indigo-400 cursor-pointer ring-4 ring-indigo-200 w-20 h-20 hover:bg-indigo-200 hover:shadow-2xl hover:scale-110 animate-pulse-grow ${isMobile ? (clickedStepIdx === globalIdx ? 'shadow-2xl scale-110' : '') : (activeTooltipIdx === globalIdx ? 'shadow-2xl scale-110' : '')}`
                                                                 : isCompleted
                                                                     ? 'bg-green-100 border-green-400 w-14 h-14'
                                                                     : 'bg-gray-100 border-gray-300 w-14 h-14'}
@@ -517,6 +537,58 @@ const Dashboard = () => {
                                 </div>
                             </div>
                             {/* End Day Streak Milestones */}
+                        </div>
+                    </div>
+                    {/* Test Card */}
+                    <div className="bg-white/30 rounded-2xl shadow p-6 flex flex-col md:flex-row gap-6 items-center mb-6">
+                        {/* Start Learning Section (desktop only) */}
+                        <div className="flex-1 w-full">
+                            <div className="mb-4">
+                                <div className="text-lg font-semibold text-gray-900 mb-2">Test Your Knowledge</div>
+                                {/* Speed Challenge Section */}
+                                <div className="mt-6 space-y-4">
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => navigate('/speed-challenge')}
+                                            disabled={stats.learnedWords < 60}
+                                            className={`w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center ${stats.learnedWords >= 60
+                                                ? 'bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white'
+                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            <Zap className="w-8 h-8" />
+                                            <span className="font-semibold text-lg">Speed Challenge</span>
+                                            {stats.learnedWords < 60 && (
+                                                <span className="text-xs mt-1">Need {60 - stats.learnedWords} more words</span>
+                                            )}
+                                        </button>
+                                        {stats.learnedWords < 60 && (
+                                            <div className="absolute inset-0 bg-black bg-opacity-20 rounded-xl flex items-center justify-center">
+                                                <Lock className="w-8 h-8 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Test and Pinyin Test buttons */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => navigate('/test')}
+                                            className="w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 hover:from-indigo-500 hover:to-purple-600 text-white"
+                                        >
+                                            <BookOpen className="w-8 h-8" />
+                                            <span className="font-semibold text-lg">Test</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => navigate('/pinyin-test')}
+                                            className="w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white"
+                                        >
+                                            <Languages className="w-8 h-8" />
+                                            <span className="font-semibold text-lg">Pinyin Test</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
