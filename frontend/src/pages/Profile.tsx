@@ -16,8 +16,10 @@ const Profile = () => {
         const confirmed = window.confirm('Are you sure you want to reset all your progress? This action cannot be undone.');
         if (!confirmed) return;
         try {
-            await axios.post(`${API_BASE}/vocabulary/reset`);
-            await axios.post(`${API_BASE}/session-progress/reset`);
+            await axios.post(`${API_BASE}/vocabulary/reset-progress`);
+            await axios.delete(`${API_BASE}/session-progress`);
+            await axios.delete(`${API_BASE}/mistakes`);
+            await axios.delete(`${API_BASE}/stats/speed-challenge`);
             toast.success('Progress reset successfully!');
             navigate('/');
         } catch (error) {

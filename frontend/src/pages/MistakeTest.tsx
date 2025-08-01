@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Volume2, RotateCcw, Check, X, Lightbulb } from 'lucide-react';
+import { Volume2, Check, X, Lightbulb, Lock } from 'lucide-react';
 import Confetti from '../components/Confetti';
 
 interface VocabWord {
@@ -15,8 +15,8 @@ interface VocabWord {
 
 interface Question {
     word: VocabWord;
-    question: string;
     answer: string;
+    type: 'english' | 'pinyin' | 'listen-test';
 }
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -56,7 +56,14 @@ const normalizePinyin = (pinyin: string) => {
         .replace(/\s+/g, ''); // Remove all spaces
 };
 
-const ListenTest = () => {
+const createHint = (text: string) => {
+    if (text.length === 0) return '';
+    const firstChar = text.charAt(0);
+    const rest = text.slice(1).replace(/./g, '•');
+    return firstChar + rest;
+};
+
+const MistakeTest = () => {
     const navigate = useNavigate();
     const [words, setWords] = useState<VocabWord[]>([]);
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -67,9 +74,9 @@ const ListenTest = () => {
     const [isFinished, setIsFinished] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [mistakeCount, setMistakeCount] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
-    const questionsGeneratedRef = useRef(false);
 
     // Add feedback state
     const [feedback, setFeedback] = useState<string | null>(null);
@@ -83,38 +90,54 @@ const ListenTest = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`${API_BASE}/vocabulary`);
-                const learned = response.data.filter((w: VocabWord) => w.isLearned);
-                setWords(learned);
+                // First check mistake count
+                const countResponse = await axios.get(`${API_BASE}/mistakes/count`);
+                const count = countResponse.data.count;
+                setMistakeCount(count);
+
+                if (count < 10) {
+                    setLoading(false);
+                    return; // Not enough mistakes
+                }
+
+                // Get unique mistake word IDs
+                const uniqueWordsResponse = await axios.get(`${API_BASE}/mistakes/unique-words`);
+                const wordIds = uniqueWordsResponse.data.wordIds;
+
+                if (wordIds.length === 0) {
+                    setLoading(false);
+                    return;
+                }
+
+                // Get the actual word data for these IDs
+                const vocabularyResponse = await axios.get(`${API_BASE}/vocabulary`);
+                const allWords = vocabularyResponse.data;
+                const mistakeWords = allWords.filter((word: VocabWord) =>
+                    wordIds.includes(word.id)
+                );
+
+                setWords(mistakeWords);
                 setLoading(false);
 
-                // Start test immediately if there are learned words
-                if (learned.length > 0 && !questionsGeneratedRef.current) {
-                    questionsGeneratedRef.current = true;
-                    const testQuestions = generateQuestions(learned);
-                    setQuestions(testQuestions);
-                    setTotalQuestions(testQuestions.length);
-                    setCurrentQuestion(0);
-                    setCorrectAnswers(0);
-                    setIsFinished(false);
-                    setAnswer('');
-                    setShowConfetti(false);
-                    setIncorrectAttempts(0);
-                    setShowHint(false);
-                    setHintText('');
+                // Generate questions from mistakes
+                const testQuestions = generateQuestions(mistakeWords);
+                setQuestions(testQuestions);
+                setTotalQuestions(testQuestions.length);
+                setCurrentQuestion(0);
+                setCorrectAnswers(0);
+                setIsFinished(false);
+                setAnswer('');
+                setShowConfetti(false);
+                setIncorrectAttempts(0);
+                setShowHint(false);
+                setHintText('');
 
-                    // Auto-focus input
-                    setTimeout(() => {
-                        inputRef.current?.focus();
-                    }, 100);
-
-                    // Play audio for first question
-                    setTimeout(() => {
-                        playAudio(testQuestions[0]);
-                    }, 500);
-                }
+                // Auto-focus input
+                setTimeout(() => {
+                    inputRef.current?.focus();
+                }, 100);
             } catch (error) {
-                toast.error('Failed to load vocabulary.');
+                toast.error('Failed to load mistake data.');
                 navigate('/');
             }
         };
@@ -122,17 +145,34 @@ const ListenTest = () => {
     }, [navigate]);
 
     const generateQuestions = (wordList: VocabWord[]) => {
-        const selectedWords = wordList.sort(() => 0.5 - Math.random()).slice(0, 10);
-        const newQuestions: Question[] = selectedWords.map(word => ({
-            word,
-            question: `Listen to the audio and write the pinyin`,
-            answer: word.pinyin
-        }));
+        const selectedWords = [...wordList].sort(() => 0.5 - Math.random()).slice(0, Math.min(10, wordList.length));
+        const newQuestions: Question[] = selectedWords.map(word => {
+            // Randomly choose between English, Pinyin, and Listen-test questions
+            const questionType = Math.random();
+            let type: 'english' | 'pinyin' | 'listen-test';
+            let answer: string;
+
+            if (questionType < 0.4) {
+                type = 'english';
+                answer = word.english;
+            } else if (questionType < 0.8) {
+                type = 'pinyin';
+                answer = word.pinyin;
+            } else {
+                type = 'listen-test';
+                answer = word.pinyin;
+            }
+
+            return {
+                word,
+                answer,
+                type
+            };
+        });
         return newQuestions;
     };
 
     const startTest = () => {
-        questionsGeneratedRef.current = false;
         const testQuestions = generateQuestions(words);
         setQuestions(testQuestions);
         setTotalQuestions(testQuestions.length);
@@ -149,53 +189,6 @@ const ListenTest = () => {
         setTimeout(() => {
             inputRef.current?.focus();
         }, 100);
-
-        // Play audio for first question
-        setTimeout(() => {
-            playAudio(testQuestions[0]);
-        }, 500);
-    };
-
-    const playAudio = async (question?: Question) => {
-        const currentQ = question || questions[currentQuestion];
-        if (!currentQ) return;
-
-        const currentWord = currentQ.word;
-        try {
-            const response = await axios.post(`${API_BASE}/tts`, {
-                text: currentWord.chinese,
-                language: 'zh-CN'
-            }, {
-                responseType: 'blob'
-            });
-
-            const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-
-            if (audioRef.current) {
-                audioRef.current.src = audioUrl;
-                audioRef.current.play().catch(error => {
-                    console.error('Failed to play audio:', error);
-                    toast.error('Failed to play audio. Please try again.');
-                });
-            }
-        } catch (error) {
-            console.error('Failed to generate audio:', error);
-            toast.error('Failed to generate audio. Please try again.');
-        }
-    };
-
-    const createHint = (pinyin: string) => {
-        if (pinyin.length === 0) return '';
-        const firstChar = pinyin.charAt(0);
-        const rest = pinyin.slice(1).replace(/./g, '•');
-        return firstChar + rest;
-    };
-
-    const handleShowHint = () => {
-        const currentQ = questions[currentQuestion];
-        setHintText(createHint(currentQ.answer));
-        setShowHint(true);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -205,12 +198,27 @@ const ListenTest = () => {
 
         const currentQ = questions[currentQuestion];
         let userAnswer = answer.trim();
+        let isCorrect = false;
 
-        // Normalize the user's pinyin input
-        userAnswer = normalizePinyin(userAnswer);
-        const correctAnswer = normalizePinyin(currentQ.answer);
-
-        const isCorrect = userAnswer === correctAnswer;
+        if (currentQ.type === 'english') {
+            // English question logic
+            const possibleAnswers = currentQ.answer
+                .split(';')
+                .map(s => normalizeQuotes(stripSpecialChars(stripParens(s).trim())).toLowerCase())
+                .filter(Boolean);
+            userAnswer = normalizeQuotes(stripSpecialChars(stripParens(userAnswer).trim())).toLowerCase();
+            isCorrect = possibleAnswers.includes(userAnswer);
+        } else if (currentQ.type === 'pinyin') {
+            // Pinyin question logic
+            userAnswer = normalizePinyin(userAnswer);
+            const correctAnswer = normalizePinyin(currentQ.answer);
+            isCorrect = userAnswer === correctAnswer;
+        } else {
+            // Listen-test question logic (same as Pinyin)
+            userAnswer = normalizePinyin(userAnswer);
+            const correctAnswer = normalizePinyin(currentQ.answer);
+            isCorrect = userAnswer === correctAnswer;
+        }
 
         if (isCorrect) {
             setCorrectAnswers(prev => prev + 1);
@@ -235,17 +243,6 @@ const ListenTest = () => {
             setFeedback('incorrect');
             setFeedbackOpacity(1);
             setIncorrectAttempts(prev => prev + 1);
-
-            // Record mistake
-            try {
-                await axios.post(`${API_BASE}/mistakes/record`, {
-                    wordId: currentQ.word.id,
-                    testType: 'listen-test'
-                });
-            } catch (error) {
-                console.error('Failed to record mistake:', error);
-                // Don't show error to user as this is not critical
-            }
 
             // Clear answer but don't move to next question automatically
             setAnswer('');
@@ -274,13 +271,7 @@ const ListenTest = () => {
 
         if (currentQuestion < questions.length - 1) {
             const nextQuestionIndex = currentQuestion + 1;
-            const nextQuestion = questions[nextQuestionIndex];
             setCurrentQuestion(nextQuestionIndex);
-
-            // Play audio for next question
-            setTimeout(() => {
-                playAudio(nextQuestion);
-            }, 300);
         } else {
             // Test is finished
             setIsFinished(true);
@@ -305,6 +296,38 @@ const ListenTest = () => {
         setAnswer(e.target.value);
     };
 
+    const playAudio = async () => {
+        if (!currentQ.word) return;
+        try {
+            const response = await axios.post(`${API_BASE}/tts`, {
+                text: currentQ.word.chinese,
+                language: 'zh-CN'
+            }, {
+                responseType: 'blob'
+            });
+
+            const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            if (audioRef.current) {
+                audioRef.current.src = audioUrl;
+                audioRef.current.play().catch(error => {
+                    console.error('Failed to play audio:', error);
+                    toast.error('Failed to play audio. Please try again.');
+                });
+            }
+        } catch (error) {
+            console.error('Failed to generate audio:', error);
+            toast.error('Failed to generate audio. Please try again.');
+        }
+    };
+
+    const handleShowHint = () => {
+        const currentQ = questions[currentQuestion];
+        setHintText(createHint(currentQ.answer));
+        setShowHint(true);
+    };
+
     // Reset hint state when question changes
     useEffect(() => {
         setIncorrectAttempts(0);
@@ -312,8 +335,47 @@ const ListenTest = () => {
         setHintText('');
     }, [currentQuestion]);
 
+    // Auto-play audio for listen-test questions
+    useEffect(() => {
+        if (questions.length > 0 && currentQuestion < questions.length) {
+            const currentQ = questions[currentQuestion];
+            if (currentQ && currentQ.type === 'listen-test') {
+                // Play audio after a short delay to ensure the question is loaded
+                setTimeout(() => {
+                    playAudio();
+                }, 50);
+            }
+        }
+    }, [currentQuestion, questions]);
+
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    }
+
+    if (mistakeCount < 10) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center">
+                <div className="w-full max-w-md mx-auto p-6">
+                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
+                        <div className="flex justify-center mb-4">
+                            <Lock className="w-16 h-16 text-gray-400" />
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4">🔍 Mistake Test</h2>
+                        <p className="text-gray-600 mb-6">
+                            You need at least 10 mistakes to unlock the Mistake Test.
+                            <br />
+                            <span className="font-semibold">Current mistakes: {mistakeCount}</span>
+                        </p>
+                        <button
+                            className="w-full py-4 rounded-xl bg-indigo-600 text-white font-semibold text-xl shadow-lg hover:bg-indigo-700 transition"
+                            onClick={() => navigate('/')}
+                        >
+                            Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     if (isFinished) {
@@ -322,7 +384,7 @@ const ListenTest = () => {
                 {showConfetti && <Confetti />}
                 <div className="w-full max-w-md mx-auto p-6">
                     <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
-                        <h2 className="text-2xl font-bold mb-4">🎧 Listen Test Complete!</h2>
+                        <h2 className="text-2xl font-bold mb-4">🔍 Mistake Test Complete!</h2>
                         <div className="mb-6 space-y-2">
                             <p className="text-lg">You got <span className="font-bold text-indigo-600">{correctAnswers}</span> out of <span className="font-bold text-indigo-600">{totalQuestions}</span> correct!</p>
                         </div>
@@ -351,9 +413,9 @@ const ListenTest = () => {
             <div className="min-h-screen flex flex-col items-center justify-center">
                 <div className="w-full max-w-md mx-auto p-6">
                     <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
-                        <h2 className="text-3xl font-bold mb-4">🎧 Listen Test</h2>
+                        <h2 className="text-3xl font-bold mb-4">🔍 Mistake Test</h2>
                         <p className="text-gray-600 mb-6">
-                            You need at least one learned word to start the Listen Test.
+                            No mistakes found. Take some tests first to generate mistakes!
                         </p>
                         <button
                             className="w-full py-4 rounded-xl bg-indigo-600 text-white font-semibold text-xl shadow-lg hover:bg-indigo-700 transition"
@@ -376,23 +438,34 @@ const ListenTest = () => {
                 {/* Question Card */}
                 <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
                     <div className="text-center mb-6">
-                        <h2 className="text-xl text-gray-600 mb-2">Listen to the audio</h2>
+                        <h2 className="text-xl text-gray-600 mb-2">Mistake Test</h2>
+                        <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                            {currentQ.type === 'pinyin' ? 'English → Pinyin' :
+                                currentQ.type === 'listen-test' ? 'Listen → Pinyin' :
+                                    'Chinese → English'}
+                        </span>
                     </div>
 
-                    {/* Audio Controls */}
-                    <div className="flex justify-center mb-6">
-                        <button
-                            onClick={() => playAudio()}
-                            className="flex items-center gap-2 px-6 py-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
-                        >
-                            <Volume2 className="w-5 h-5" />
-                            <span>Play Audio</span>
-                        </button>
-                    </div>
-
-                    {/* Hanzi Display */}
+                    {/* Question Display */}
                     <div className="text-center mb-6">
-                        <div className="text-6xl mb-2">{currentQ.word.chinese}</div>
+                        <div className="text-4xl mb-2">{currentQ.word.chinese}</div>
+                        {currentQ.type === 'pinyin' && (
+                            <p className="text-lg text-gray-500 mt-2">{currentQ.word.english}</p>
+                        )}
+                        {currentQ.type === 'english' && (
+                            <p className="text-lg text-gray-500 mt-2">{currentQ.word.pinyin}</p>
+                        )}
+                        {currentQ.type === 'listen-test' && (
+                            <div className="mt-4">
+                                <button
+                                    onClick={playAudio}
+                                    className="flex items-center gap-2 mx-auto px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                                >
+                                    <Volume2 className="w-5 h-5" />
+                                    <span>Play Audio</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <form onSubmit={handleSubmit}>
@@ -400,7 +473,9 @@ const ListenTest = () => {
                             ref={inputRef}
                             type="text"
                             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg mb-4"
-                            placeholder="Enter pinyin..."
+                            placeholder={currentQ.type === 'english' ? 'Enter English translation...' :
+                                currentQ.type === 'listen-test' ? 'Enter pinyin...' :
+                                    'Enter pinyin...'}
                             value={answer}
                             onChange={handleInputChange}
                             autoFocus
@@ -439,6 +514,7 @@ const ListenTest = () => {
                             <p className="text-lg font-mono text-blue-800">{hintText}</p>
                         </div>
                     )}
+
                     <div className="mt-6">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
@@ -449,9 +525,6 @@ const ListenTest = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Hidden audio element */}
-            <audio ref={audioRef} style={{ display: 'none' }} />
 
             {/* Centered Feedback Overlay */}
             {feedback && (
@@ -470,8 +543,11 @@ const ListenTest = () => {
                     </div>
                 </div>
             )}
+
+            {/* Hidden audio element */}
+            <audio ref={audioRef} style={{ display: 'none' }} />
         </div>
     );
 };
 
-export default ListenTest; 
+export default MistakeTest; 

@@ -346,39 +346,30 @@ const Study = () => {
 
     if (sessionFinished) {
         const nextSession = currentSession + 1;
-        const cycleStep = nextSession % 10;
+        const cycleStep = nextSession % 14; // Use 14-step cycle
 
-        // Check if we just completed 2 study sessions in a row
-        const isAfterTwoStudySessions = cycleStep === 2 || cycleStep === 6;
+        // Check if we just completed study sessions that should lead to tests
+        const isAfterStudySessions = cycleStep === 2 || cycleStep === 3 || cycleStep === 4 ||
+            cycleStep === 7 || cycleStep === 8 || cycleStep === 11 ||
+            cycleStep === 12 || cycleStep === 13;
 
         // Determine the next step in the learning cycle
         let nextStepText = '';
         let nextStepAction = () => { };
 
-        if (isAfterTwoStudySessions) {
-            // After 2 study sessions, only show return to dashboard
+        if (isAfterStudySessions) {
+            // After study sessions, show return to dashboard
             nextStepText = 'Return to Dashboard';
             nextStepAction = handleReturnToDashboard;
-        } else if (cycleStep === 0 || cycleStep === 1 || cycleStep === 4 || cycleStep === 5) {
+        } else if (cycleStep === 0 || cycleStep === 1 || cycleStep === 5 || cycleStep === 6 ||
+            cycleStep === 9 || cycleStep === 10) {
             // Next step is a study session
             nextStepText = `Continue to Session ${nextSession + 1}`;
             nextStepAction = handleContinueSession;
-        } else if (cycleStep === 3) {
-            // Next step is Recently Learned Pinyin Test
-            nextStepText = 'Take Recently Learned Pinyin Test';
-            nextStepAction = () => navigate('/pinyin-test?recent=true');
-        } else if (cycleStep === 7) {
-            // Next step is Recently Learned Pinyin Test
-            nextStepText = 'Take Recently Learned Pinyin Test';
-            nextStepAction = () => navigate('/pinyin-test?recent=true');
-        } else if (cycleStep === 8) {
-            // Next step is Take Test (all words)
-            nextStepText = 'Take Test (All Words)';
-            nextStepAction = () => navigate('/test');
-        } else if (cycleStep === 9) {
-            // Next step is Pinyin Test (all words)
-            nextStepText = 'Take Pinyin Test (All Words)';
-            nextStepAction = () => navigate('/pinyin-test');
+        } else {
+            // Default to return to dashboard
+            nextStepText = 'Return to Dashboard';
+            nextStepAction = handleReturnToDashboard;
         }
 
         return (
@@ -407,7 +398,7 @@ const Study = () => {
                             >
                                 {nextStepText}
                             </button>
-                            {!isAfterTwoStudySessions && (
+                            {!isAfterStudySessions && (
                                 <button
                                     onClick={handleReturnToDashboard}
                                     className="btn-secondary w-full"

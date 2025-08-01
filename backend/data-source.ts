@@ -10,6 +10,7 @@ import { SessionProgress } from './src/entities/session-progress.entity';
 import { TestSession } from './src/entities/test-session.entity';
 import { UserActivity } from './src/entities/user-activity.entity';
 import { SpeedChallengeScore } from './src/entities/speed-challenge-score.entity';
+import { UserMistake } from './src/entities/user-mistake.entity';
 
 // Helper to parse port with fallback
 const parsePort = (port?: string, fallback = 5432) =>
@@ -48,6 +49,7 @@ export default new DataSource(
           TestSession,
           UserActivity,
           SpeedChallengeScore,
+          UserMistake
         ],
         migrations: ['src/migrations/*.ts'],
       }
@@ -67,6 +69,7 @@ export default new DataSource(
           TestSession,
           UserActivity,
           SpeedChallengeScore,
+          UserMistake,
         ],
         migrations: ['src/migrations/*.ts'],
       }

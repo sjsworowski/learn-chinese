@@ -187,6 +187,17 @@ const Test = () => {
             setFeedbackOpacity(1);
             setIncorrectAttempts(prev => prev + 1);
 
+            // Record mistake
+            try {
+                await axios.post(`${API_BASE}/mistakes/record`, {
+                    wordId: words[currentIdx].id,
+                    testType: 'test'
+                });
+            } catch (error) {
+                console.error('Failed to record mistake:', error);
+                // Don't show error to user as this is not critical
+            }
+
             // Show hint after 3 incorrect attempts
             if (incorrectAttempts === 2) { // This will be the 3rd attempt
                 const firstAnswer = possibleAnswers[0]; // Use the first answer for hint

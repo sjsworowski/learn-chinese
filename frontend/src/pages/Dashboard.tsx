@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { CheckCircle, Lock, ArrowRight, BookOpen, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages, Volume2 } from 'lucide-react';
+import { CheckCircle, ArrowRight, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages, Volume2, Lock, BookOpen } from 'lucide-react';
 import axios from 'axios'
 import toast from 'react-hot-toast'
 /// <reference types="vite/client" />
@@ -25,14 +25,18 @@ const stripParens = (str: string) => str.replace(/\([^)]*\)/g, '').replace(/\s+/
 const learningSteps = [
     { label: 'Study', color: 'bg-blue-500', icon: <BookOpen className="w-5 h-5 text-white" /> },
     { label: 'Study', color: 'bg-blue-500', icon: <BookOpen className="w-5 h-5 text-white" /> },
-    { label: 'Test', color: 'bg-indigo-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
-    { label: 'Pinyin', color: 'bg-emerald-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
+    { label: 'Recent Test', color: 'bg-indigo-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
+    { label: 'Recent Pinyin', color: 'bg-emerald-500', icon: <Languages className="w-5 h-5 text-white" /> },
+    { label: 'Listen', color: 'bg-cyan-500', icon: <Volume2 className="w-5 h-5 text-white" /> },
     { label: 'Study', color: 'bg-blue-500', icon: <BookOpen className="w-5 h-5 text-white" /> },
     { label: 'Study', color: 'bg-blue-500', icon: <BookOpen className="w-5 h-5 text-white" /> },
-    { label: 'Test', color: 'bg-indigo-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
-    { label: 'Pinyin', color: 'bg-emerald-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
-    { label: 'Test', color: 'bg-pink-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
-    { label: 'Test', color: 'bg-green-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
+    { label: 'Recent Test', color: 'bg-indigo-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
+    { label: 'Recent Pinyin', color: 'bg-emerald-500', icon: <Languages className="w-5 h-5 text-white" /> },
+    { label: 'Study', color: 'bg-blue-500', icon: <BookOpen className="w-5 h-5 text-white" /> },
+    { label: 'Study', color: 'bg-blue-500', icon: <BookOpen className="w-5 h-5 text-white" /> },
+    { label: 'Test', color: 'bg-purple-500', icon: <CheckCircle className="w-5 h-5 text-white" /> },
+    { label: 'Pinyin Test', color: 'bg-teal-500', icon: <Languages className="w-5 h-5 text-white" /> },
+    { label: 'Mistakes', color: 'bg-red-500', icon: <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg> },
 ];
 
 const Dashboard = () => {
@@ -43,16 +47,22 @@ const Dashboard = () => {
         currentStreak: 0,
         totalStudyTime: 0,
         testsCompleted: 0,
-        speedChallengeHighScore: 0
-    })
+        speedChallengeHighScore: 0,
+        difficultyCounts: {
+            beginner: { total: 0, learned: 0 },
+            intermediate: { total: 0, learned: 0 },
+            advanced: { total: 0, learned: 0 }
+        }
+    });
+    const [mistakeCount, setMistakeCount] = useState(0);
     const [sessionProgress, setSessionProgress] = useState({
         currentSession: 0,
         totalSessions: 0,
         hasProgress: false
     })
     const currentStep = sessionProgress?.currentSession || 0;
-    const cycleStep = currentStep % 10;
-    const unitNumber = 1 + Math.floor(currentStep / 10);
+    const cycleStep = currentStep % 14;
+    const unitNumber = 1 + Math.floor(currentStep / 14);
     const navigate = useNavigate()
     const location = useLocation()
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -130,6 +140,14 @@ const Dashboard = () => {
                 statsData.speedChallengeHighScore = 0
             }
 
+            // Fetch mistake count
+            try {
+                const mistakeResponse = await axios.get(`${API_BASE}/mistakes/count`);
+                setMistakeCount(mistakeResponse.data.count || 0);
+            } catch (error) {
+                console.error('Failed to fetch mistake count:', error);
+            }
+
             setStats(statsData)
         } catch (error) {
             console.error('Failed to fetch stats from backend:', error)
@@ -197,7 +215,7 @@ const Dashboard = () => {
 
     // Helper to get button label and handler for current step
     const getStartLearningButton = () => {
-        const step = currentStep % 10;
+        const step = currentStep % 14;
         if (step === 0) {
             return { label: 'Start Study', onClick: startStudy };
         }
@@ -211,22 +229,34 @@ const Dashboard = () => {
             return { label: 'Recent Pinyin Test', onClick: () => navigate('/pinyin-test?recent=true') };
         }
         if (step === 4) {
-            return { label: 'Continue Study', onClick: startStudy };
+            return { label: 'Listen Test', onClick: () => navigate('/listen-test') };
         }
         if (step === 5) {
             return { label: 'Continue Study', onClick: startStudy };
         }
         if (step === 6) {
-            return { label: 'Recent Test', onClick: () => navigate('/test?recent=true') };
+            return { label: 'Continue Study', onClick: startStudy };
         }
         if (step === 7) {
-            return { label: 'Recent Pinyin Test', onClick: () => navigate('/pinyin-test?recent=true') };
+            return { label: 'Recent Test', onClick: () => navigate('/test?recent=true') };
         }
         if (step === 8) {
-            return { label: 'Test', onClick: () => navigate('/test') };
+            return { label: 'Recent Pinyin Test', onClick: () => navigate('/pinyin-test?recent=true') };
         }
         if (step === 9) {
+            return { label: 'Continue Study', onClick: startStudy };
+        }
+        if (step === 10) {
+            return { label: 'Continue Study', onClick: startStudy };
+        }
+        if (step === 11) {
+            return { label: 'Test', onClick: () => navigate('/test') };
+        }
+        if (step === 12) {
             return { label: 'Pinyin Test', onClick: () => navigate('/pinyin-test') };
+        }
+        if (step === 13) {
+            return { label: 'Mistake Test', onClick: () => navigate('/mistake-test') };
         }
         // Default fallback (should not be reached)
         return { label: 'Start', onClick: startStudy };
@@ -547,26 +577,57 @@ const Dashboard = () => {
                                 <div className="text-lg font-semibold text-gray-900 mb-2">Test Your Knowledge</div>
                                 {/* Speed Challenge Section */}
                                 <div className="mt-6 space-y-4">
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => navigate('/speed-challenge')}
-                                            disabled={stats.learnedWords < 60}
-                                            className={`w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center ${stats.learnedWords >= 60
-                                                ? 'bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white'
-                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            <Zap className="w-8 h-8" />
-                                            <span className="font-semibold text-lg">Speed Challenge</span>
+                                    {/* Speed Challenge and Mistake Test in 2-column grid on md+ */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => navigate('/speed-challenge')}
+                                                disabled={stats.learnedWords < 60}
+                                                className={`w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center ${stats.learnedWords >= 60
+                                                    ? 'bg-gradient-to-br from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white'
+                                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <Zap className="w-8 h-8" />
+                                                <span className="font-semibold text-lg">Speed Challenge</span>
+                                                {stats.learnedWords < 60 ? (
+                                                    <span className="text-xs mt-1">Need {60 - stats.learnedWords} more words</span>
+                                                ) : (
+                                                    <span className="text-xs mt-1">High Score: {stats.speedChallengeHighScore ?? 0}</span>
+                                                )}
+                                            </button>
                                             {stats.learnedWords < 60 && (
-                                                <span className="text-xs mt-1">Need {60 - stats.learnedWords} more words</span>
+                                                <div className="absolute inset-0 bg-black bg-opacity-20 rounded-xl flex items-center justify-center">
+                                                    <Lock className="w-8 h-8 text-white" />
+                                                </div>
                                             )}
-                                        </button>
-                                        {stats.learnedWords < 60 && (
-                                            <div className="absolute inset-0 bg-black bg-opacity-20 rounded-xl flex items-center justify-center">
-                                                <Lock className="w-8 h-8 text-white" />
-                                            </div>
-                                        )}
+                                        </div>
+
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => navigate('/mistake-test')}
+                                                disabled={mistakeCount < 10}
+                                                className={`w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center ${mistakeCount >= 10
+                                                    ? 'bg-gradient-to-br from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 text-white'
+                                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="font-semibold text-lg">Mistake Test</span>
+                                                {mistakeCount < 10 ? (
+                                                    <span className="text-xs mt-1">Need {10 - mistakeCount} more mistakes</span>
+                                                ) : (
+                                                    <span className="text-xs mt-1">{mistakeCount} Mistakes</span>
+                                                )}
+                                            </button>
+                                            {mistakeCount < 10 && (
+                                                <div className="absolute inset-0 bg-black bg-opacity-20 rounded-xl flex items-center justify-center">
+                                                    <Lock className="w-8 h-8 text-white" />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Test and Pinyin Test buttons */}

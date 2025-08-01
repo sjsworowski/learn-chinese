@@ -13,12 +13,14 @@ import { SessionProgress } from './entities/session-progress.entity';
 import { TestSession } from './entities/test-session.entity';
 import { UserActivity } from './entities/user-activity.entity';
 import { SpeedChallengeScore } from './entities/speed-challenge-score.entity';
+import { UserMistake } from './entities/user-mistake.entity';
 import { HealthController } from './health.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TtsController } from './tts/tts.controller';
 import { TtsService } from './tts/tts.service';
 import { TtsModule } from './tts/tts.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { MistakeModule } from './mistake/mistake.module';
 
 const appJwtSecret = process.env.JWT_SECRET || 'fallback-secret';
 console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
@@ -49,6 +51,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
               TestSession,
               UserActivity,
               SpeedChallengeScore,
+              UserMistake,
             ],
             synchronize: false,
           }
@@ -68,6 +71,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
               TestSession,
               UserActivity,
               SpeedChallengeScore,
+              UserMistake,
             ],
             synchronize: false,
           };
@@ -88,6 +92,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
     TtsModule,
     StatsModule,
     SessionProgressModule,
+    MistakeModule,
     ThrottlerModule.forRoot([{
       ttl: 60000, // 1 minute
       limit: 10, // 10 requests per minute

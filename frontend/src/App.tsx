@@ -12,6 +12,7 @@ import Profile from './pages/Profile'
 import MagicLinkVerify from './pages/MagicLinkVerify'
 import SpeedChallenge from './pages/SpeedChallenge';
 import ListenTest from './pages/ListenTest';
+import MistakeTest from './pages/MistakeTest';
 
 function App() {
     return (
@@ -57,13 +58,18 @@ function App() {
                                 <ListenTest />
                             </ProtectedRoute>
                         } />
+                        <Route path="/mistake-test" element={
+                            <ProtectedRoute>
+                                <MistakeTest />
+                            </ProtectedRoute>
+                        } />
                     </Routes>
                     <Toaster position="top-center" />
                 </main>
 
                 {/* Footer */}
                 <footer className="w-full p-4 text-center text-m text-gray-500">
-                    Version 1.0.6
+                    Version 1.0.7
                 </footer>
             </div>
         </AuthProvider>

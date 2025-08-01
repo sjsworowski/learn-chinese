@@ -460,9 +460,7 @@ const SpeedChallenge = () => {
                             </span>
                         </div>
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">{currentQ.question}</h2>
-                        {currentQ.type === 'english-to-pinyin' && (
-                            <span className="text-lg text-gray-500">{currentQ.word.chinese}</span>
-                        )}
+                        <span className="text-lg text-gray-500">{currentQ.word.chinese}</span>
                     </div>
 
                     <form onSubmit={handleSubmit}>

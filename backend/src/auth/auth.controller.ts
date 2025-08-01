@@ -10,18 +10,11 @@ export class AuthController {
         private magicLinkService: MagicLinkService
     ) { }
 
-    @UseGuards(JwtAuthGuard)
     @Get('me')
+    @UseGuards(JwtAuthGuard)
     async getProfile(@Request() req) {
-        const user = await this.authService.findById(req.user.userId);
-        if (!user) {
-            throw new UnauthorizedException('User not found');
-        }
-        return {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-        };
+        const user = await this.authService.findById(req.user.id);
+        return user;
     }
 
     @Post('magic-link/send')

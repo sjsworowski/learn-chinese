@@ -135,4 +135,9 @@ export class StatsService {
 
         return highScore ? highScore.score : 0;
     }
+
+    async clearSpeedChallengeScores(userId: string) {
+        await this.speedChallengeScoreRepository.delete({ userId });
+        return { success: true, message: 'Speed challenge scores cleared successfully' };
+    }
 } 

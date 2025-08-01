@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Param, UseGuards, Request, Body } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { VocabularyService } from './vocabulary.service';
 
@@ -8,28 +8,27 @@ export class VocabularyController {
     constructor(private vocabService: VocabularyService) { }
 
     @Get()
-    async getAll(@Request() req) {
-        return this.vocabService.getAllForUser(req.user.userId);
+    async getAllForUser(@Request() req) {
+        return this.vocabService.getAllForUser(req.user.id);
     }
 
     @Get('recently-learned')
-    async getRecentlyLearned(@Request() req) {
-        return this.vocabService.getRecentlyLearnedForUser(req.user.userId);
+    async getRecentlyLearnedForUser(@Request() req) {
+        return this.vocabService.getRecentlyLearnedForUser(req.user.id);
     }
 
     @Post(':id/learn')
     async markAsLearned(@Request() req, @Param('id') id: string) {
-        return this.vocabService.markAsLearned(req.user.userId, id);
+        return this.vocabService.markAsLearned(req.user.id, id);
     }
 
-    @Post('reset')
+    @Post('reset-progress')
     async resetProgress(@Request() req) {
-        return this.vocabService.resetProgress(req.user.userId);
+        return this.vocabService.resetProgress(req.user.id);
     }
 
-    @Post('log-activity')
-    async logActivity(@Request() req) {
-        const { type, duration } = req.body;
-        return this.vocabService.logUserActivity(req.user.userId, type, duration);
+    @Post('activity')
+    async logUserActivity(@Request() req, @Body() body: { type: 'study' | 'test'; duration?: number }) {
+        return this.vocabService.logUserActivity(req.user.id, body.type, body.duration);
     }
 } 

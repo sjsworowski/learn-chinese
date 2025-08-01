@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Delete } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { StatsService } from './stats.service';
 
@@ -9,30 +9,32 @@ export class StatsController {
 
     @Get()
     async getStats(@Request() req) {
-        return this.statsService.getStatsForUser(req.user.userId);
+        return this.statsService.getStatsForUser(req.user.id);
     }
 
     @Post('session')
-    async saveSession(@Request() req, @Body() sessionData: { sessionTime: number; wordsStudied: number; wordsLearned: number }) {
-        return this.statsService.saveSession(req.user.userId, sessionData);
+    async saveSession(@Request() req, @Body() sessionData: any) {
+        return this.statsService.saveSession(req.user.id, sessionData);
     }
 
     @Post('test-completed')
-    @UseGuards(JwtAuthGuard)
     async recordTestCompleted(@Request() req) {
-        return this.statsService.recordTestCompleted(req.user.userId);
+        return this.statsService.recordTestCompleted(req.user.id);
     }
 
     @Post('speed-challenge')
-    @UseGuards(JwtAuthGuard)
     async recordSpeedChallenge(@Request() req, @Body() body: { score: number; timeUsed: number }) {
-        return this.statsService.recordSpeedChallenge(req.user.userId, body);
+        return this.statsService.recordSpeedChallenge(req.user.id, body);
     }
 
     @Get('speed-challenge/high-score')
-    @UseGuards(JwtAuthGuard)
     async getSpeedChallengeHighScore(@Request() req) {
-        const highScore = await this.statsService.getSpeedChallengeHighScore(req.user.userId);
+        const highScore = await this.statsService.getSpeedChallengeHighScore(req.user.id);
         return { highScore };
+    }
+
+    @Delete('speed-challenge')
+    async clearSpeedChallengeScores(@Request() req) {
+        return this.statsService.clearSpeedChallengeScores(req.user.id);
     }
 } 
