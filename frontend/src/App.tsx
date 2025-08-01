@@ -11,6 +11,7 @@ import PinyinTest from './pages/PinyinTest'
 import Profile from './pages/Profile'
 import MagicLinkVerify from './pages/MagicLinkVerify'
 import SpeedChallenge from './pages/SpeedChallenge';
+import ListenTest from './pages/ListenTest';
 
 function App() {
     return (
@@ -49,6 +50,11 @@ function App() {
                         <Route path="/pinyin-test" element={
                             <ProtectedRoute>
                                 <PinyinTest />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/listen-test" element={
+                            <ProtectedRoute>
+                                <ListenTest />
                             </ProtectedRoute>
                         } />
                     </Routes>

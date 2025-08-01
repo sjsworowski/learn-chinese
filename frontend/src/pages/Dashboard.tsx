@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { CheckCircle, Lock, ArrowRight, BookOpen, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages } from 'lucide-react';
+import { CheckCircle, Lock, ArrowRight, BookOpen, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages, Volume2 } from 'lucide-react';
 import axios from 'axios'
 import toast from 'react-hot-toast'
 /// <reference types="vite/client" />
@@ -570,7 +570,7 @@ const Dashboard = () => {
                                     </div>
 
                                     {/* Test and Pinyin Test buttons */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <button
                                             onClick={() => navigate('/test')}
                                             className="w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-400 to-purple-500 hover:from-indigo-500 hover:to-purple-600 text-white"
@@ -585,6 +585,14 @@ const Dashboard = () => {
                                         >
                                             <Languages className="w-8 h-8" />
                                             <span className="font-semibold text-lg">Pinyin Test</span>
+                                        </button>
+
+                                        <button
+                                            onClick={() => navigate('/listen-test')}
+                                            className="w-full p-4 rounded-xl shadow-lg transition-all duration-200 flex flex-col items-center justify-center bg-gradient-to-br from-blue-400 to-cyan-500 hover:from-blue-500 hover:to-cyan-600 text-white"
+                                        >
+                                            <Volume2 className="w-8 h-8" />
+                                            <span className="font-semibold text-lg">Listen Test</span>
                                         </button>
                                     </div>
                                 </div>
