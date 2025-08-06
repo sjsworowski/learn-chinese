@@ -21,9 +21,10 @@ import { TtsService } from './tts/tts.service';
 import { TtsModule } from './tts/tts.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { MistakeModule } from './mistake/mistake.module';
+import { EmailReminderModule } from './email-reminder/email-reminder.module';
+import { EmailReminder } from './entities/email-reminder.entity';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
-const appJwtSecret = process.env.JWT_SECRET || 'fallback-secret';
-console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
               UserActivity,
               SpeedChallengeScore,
               UserMistake,
+              EmailReminder,
             ],
             synchronize: false,
           }
@@ -72,6 +74,7 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
               UserActivity,
               SpeedChallengeScore,
               UserMistake,
+              EmailReminder,
             ],
             synchronize: false,
           };
@@ -93,6 +96,8 @@ console.log('🔐 AppModule JWT_SECRET:', appJwtSecret);
     StatsModule,
     SessionProgressModule,
     MistakeModule,
+    EmailReminderModule,
+    SchedulerModule,
     ThrottlerModule.forRoot([{
       ttl: 60000, // 1 minute
       limit: 10, // 10 requests per minute

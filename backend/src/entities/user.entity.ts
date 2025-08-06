@@ -17,6 +17,9 @@ export class User {
     @Column({ nullable: true })
     password: string;
 
+    @Column({ default: true })
+    emailRemindersEnabled: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 

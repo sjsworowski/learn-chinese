@@ -8,10 +8,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { MagicLinkService } from './magic-link.service';
 import { User } from '../entities/user.entity';
+import { EmailService } from '../email/email.service';
 
-// Add logging
-const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
-console.log(' AuthModule JWT_SECRET:', jwtSecret);
 
 @Module({
     imports: [
@@ -23,7 +21,6 @@ console.log(' AuthModule JWT_SECRET:', jwtSecret);
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => {
                 const secret = configService.get<string>('JWT_SECRET', 'fallback-secret');
-                console.log(' AuthModule JWT_SECRET from ConfigService:', secret);
                 return {
                     secret: secret,
                     signOptions: { expiresIn: '7d' },
@@ -32,7 +29,7 @@ console.log(' AuthModule JWT_SECRET:', jwtSecret);
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtStrategy, MagicLinkService],
+    providers: [AuthService, JwtStrategy, MagicLinkService, EmailService],
     exports: [AuthService],
 })
 export class AuthModule { }

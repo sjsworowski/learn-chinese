@@ -20,5 +20,6 @@ import { SessionProgressService } from '../session-progress/session-progress.ser
     ]), SessionProgressModule],
     controllers: [StatsController],
     providers: [StatsService, SessionProgressService],
+    exports: [StatsService]
 })
 export class StatsModule { } 

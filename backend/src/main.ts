@@ -15,8 +15,6 @@ async function bootstrap() {
     console.log('DATABASE_URL:', process.env.DATABASE_URL);
     const app = await NestFactory.create(AppModule);
 
-    const appJwtSecret = process.env.JWT_SECRET || 'fallback-secret';
-    console.log('🔐 Main JWT_SECRET:', appJwtSecret);
 
     app.use(helmet());
 

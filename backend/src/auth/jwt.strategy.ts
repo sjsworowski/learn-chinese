@@ -3,8 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-const appJwtSecret = process.env.JWT_SECRET || 'your-secret-key';
-console.log('🔐 JwtStrategy JWT_SECRET:', appJwtSecret);
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

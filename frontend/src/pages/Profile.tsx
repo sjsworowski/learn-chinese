@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, RefreshCcw, ArrowLeft } from 'lucide-react';
+import { User, RefreshCcw, ArrowLeft, Bell, BellOff, Mail } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,50 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const Profile = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [emailRemindersEnabled, setEmailRemindersEnabled] = React.useState(false);
+    const [loading, setLoading] = React.useState(false);
+    const [testEmailLoading, setTestEmailLoading] = React.useState(false);
+
+    React.useEffect(() => {
+        fetchReminderSettings();
+    }, []);
+
+    const fetchReminderSettings = async () => {
+        try {
+            const response = await axios.get(`${API_BASE}/email-reminders/settings`);
+            setEmailRemindersEnabled(response.data.enabled);
+        } catch (error) {
+            console.error('Failed to fetch reminder settings:', error);
+        }
+    };
+
+    const toggleEmailReminders = async () => {
+        setLoading(true);
+        try {
+            await axios.put(`${API_BASE}/email-reminders/settings`, {
+                enabled: !emailRemindersEnabled
+            });
+            setEmailRemindersEnabled(!emailRemindersEnabled);
+            toast.success('Email reminder settings updated!');
+        } catch (error) {
+            toast.error('Failed to update settings');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const sendTestEmail = async () => {
+        setTestEmailLoading(true);
+        try {
+            const response = await axios.post(`${API_BASE}/email-reminders/send-test-email`);
+            toast.success(response.data.message || 'Test email sent successfully!');
+        } catch (error) {
+            toast.error('Failed to send test email');
+            console.error('Test email error:', error);
+        } finally {
+            setTestEmailLoading(false);
+        }
+    };
 
     const handleResetProgress = async () => {
         const confirmed = window.confirm('Are you sure you want to reset all your progress? This action cannot be undone.');
@@ -51,6 +95,55 @@ const Profile = () => {
                         <div className="mb-2"><span className="font-semibold text-gray-700">Email:</span> <span className="text-gray-900">{user?.email}</span></div>
                         {/* Add more profile details here if available, e.g. registration date */}
                     </div>
+
+                    {/* Email Reminders Section */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-6 border border-blue-100">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            {emailRemindersEnabled ? <Bell className="w-5 h-5 text-blue-600" /> : <BellOff className="w-5 h-5 text-gray-500" />}
+                            Daily Streak Reminders
+                        </h3>
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="text-gray-700 text-sm mb-1">Get notified at 7pm if you haven't studied today</p>
+                                <p className="text-gray-500 text-xs">Help maintain your learning streak</p>
+                            </div>
+                            <button
+                                onClick={toggleEmailReminders}
+                                disabled={loading}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${emailRemindersEnabled
+                                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                {loading ? 'Updating...' : (emailRemindersEnabled ? 'Enabled' : 'Disabled')}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Test Email Button */}
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-6 border border-green-100">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <Mail className="w-5 h-5 text-green-600" />
+                            Test Reminder Email
+                        </h3>
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <p className="text-gray-700 text-sm mb-1">Send yourself a test reminder email</p>
+                                <p className="text-gray-500 text-xs">See what the daily reminder emails look like</p>
+                            </div>
+                            <button
+                                onClick={sendTestEmail}
+                                disabled={testEmailLoading || !emailRemindersEnabled}
+                                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${emailRemindersEnabled && !testEmailLoading
+                                        ? 'bg-green-500 text-white hover:bg-green-600'
+                                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                    } ${testEmailLoading ? 'opacity-50' : ''}`}
+                            >
+                                {testEmailLoading ? 'Sending...' : 'Send Test Email'}
+                            </button>
+                        </div>
+                    </div>
+
                     <button
                         onClick={handleResetProgress}
                         className="w-full py-3 rounded-xl bg-pink-100 text-pink-700 font-semibold text-lg shadow hover:bg-pink-200 transition flex items-center justify-center gap-2 mb-4"

@@ -27,6 +27,7 @@ export async function seedDatabaseIfNeeded(dataSource: DataSource) {
                 email: demoEmail,
                 username: 'DemoUser',
                 password: null, // No password needed for magic link authentication
+                emailRemindersEnabled: true, // Enable email reminders by default
             });
             user = await userRepo.save(user);
             console.log('Demo user created with ID:', user.id);
