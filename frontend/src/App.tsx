@@ -69,7 +69,7 @@ function App() {
 
                 {/* Footer */}
                 <footer className="w-full p-4 text-center text-m text-gray-500">
-                    Version 1.0.7
+                    Version 1.0.8
                 </footer>
             </div>
         </AuthProvider>

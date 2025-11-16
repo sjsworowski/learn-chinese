@@ -48,7 +48,7 @@ export class MagicLinkService {
 
       const sessionToken = this.jwtService.sign(
         { email: user.email, sub: user.id },
-        { expiresIn: "30d" }
+        { expiresIn: "90d" }
       );
 
       return {
