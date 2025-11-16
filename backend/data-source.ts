@@ -11,6 +11,7 @@ import { TestSession } from './src/entities/test-session.entity';
 import { UserActivity } from './src/entities/user-activity.entity';
 import { SpeedChallengeScore } from './src/entities/speed-challenge-score.entity';
 import { UserMistake } from './src/entities/user-mistake.entity';
+import { EmailReminder } from './src/entities/email-reminder.entity';
 
 // Helper to parse port with fallback
 const parsePort = (port?: string, fallback = 5432) =>
@@ -38,39 +39,41 @@ console.log('Using POSTGRES_HOST:', process.env.POSTGRES_HOST);
 export default new DataSource(
   useDatabaseUrl
     ? {
-        type: 'postgres',
-        url: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }, // For Supabase and similar
-        entities: [
-          User,
-          Vocabulary,
-          UserProgress,
-          SessionProgress,
-          TestSession,
-          UserActivity,
-          SpeedChallengeScore,
-          UserMistake
-        ],
-        migrations: ['src/migrations/*.ts'],
-      }
+      type: 'postgres',
+      url: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }, // For Supabase and similar
+      entities: [
+        User,
+        Vocabulary,
+        UserProgress,
+        SessionProgress,
+        TestSession,
+        UserActivity,
+        SpeedChallengeScore,
+        UserMistake,
+        EmailReminder
+      ],
+      migrations: ['src/migrations/*.ts'],
+    }
     : {
-        type: 'postgres',
-        host: process.env.POSTGRES_HOST,
-        port: parsePort(process.env.POSTGRES_PORT),
-        username: process.env.POSTGRES_USER,
-        password: process.env.POSTGRES_PASSWORD,
-        database: process.env.POSTGRES_DB,
-        ssl: { rejectUnauthorized: false }, // Adjust as needed (true/false)
-        entities: [
-          User,
-          Vocabulary,
-          UserProgress,
-          SessionProgress,
-          TestSession,
-          UserActivity,
-          SpeedChallengeScore,
-          UserMistake,
-        ],
-        migrations: ['src/migrations/*.ts'],
-      }
+      type: 'postgres',
+      host: process.env.POSTGRES_HOST,
+      port: parsePort(process.env.POSTGRES_PORT),
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
+      ssl: { rejectUnauthorized: false }, // Adjust as needed (true/false)
+      entities: [
+        User,
+        Vocabulary,
+        UserProgress,
+        SessionProgress,
+        TestSession,
+        UserActivity,
+        SpeedChallengeScore,
+        UserMistake,
+        EmailReminder
+      ],
+      migrations: ['src/migrations/*.ts'],
+    }
 );

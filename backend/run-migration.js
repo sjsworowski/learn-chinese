@@ -1,6 +1,6 @@
-require('dotenv').config();
-const { execSync } = require('child_process');
 const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') }); // Explicitly specify .env path
+const { execSync } = require('child_process');
 
 console.log('After dotenv.config():');
 console.log('process.env.DATABASE_URL:', process.env.DATABASE_URL);
