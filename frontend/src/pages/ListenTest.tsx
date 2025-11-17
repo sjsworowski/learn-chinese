@@ -58,6 +58,23 @@ const normalizePinyin = (pinyin: string) => {
 
 const ListenTest = () => {
     const navigate = useNavigate();
+    
+    // Helper to get navigation state with challenge info preserved
+    const getNavState = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const activeChallengeStr = localStorage.getItem(`activeChallenge_${today}`);
+        let navState: any = { from: 'test' };
+        if (activeChallengeStr) {
+            try {
+                const activeChallenge = JSON.parse(activeChallengeStr);
+                navState.challengeStepIndex = activeChallenge.stepIndex;
+                navState.from = 'daily-challenge';
+            } catch (e) {
+                // If parsing fails, just use 'test'
+            }
+        }
+        return navState;
+    };
     const [words, setWords] = useState<VocabWord[]>([]);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -67,6 +84,8 @@ const ListenTest = () => {
     const [isFinished, setIsFinished] = useState(false);
     const [loading, setLoading] = useState(true);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [testStartTime] = useState(Date.now());
+    const [testDuration, setTestDuration] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const questionsGeneratedRef = useRef(false);
@@ -79,6 +98,31 @@ const ListenTest = () => {
     const [incorrectAttempts, setIncorrectAttempts] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [hintText, setHintText] = useState('');
+
+    // Track test duration
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (!isFinished && !loading) {
+            timer = setInterval(() => {
+                setTestDuration(Math.floor((Date.now() - testStartTime) / 1000));
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [isFinished, loading, testStartTime]);
+
+    const logTestTime = async () => {
+        try {
+            const response = await axios.post(`${API_BASE}/vocabulary/log-activity`, {
+                type: 'test',
+                duration: testDuration
+            });
+            console.log('Test activity logged successfully:', response.data);
+        } catch (error: any) {
+            console.error('Failed to log test time:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            toast.error('Failed to log test activity');
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -115,7 +159,7 @@ const ListenTest = () => {
                 }
             } catch (error) {
                 toast.error('Failed to load vocabulary.');
-                navigate('/');
+                navigate('/', { state: getNavState() });
             }
         };
         fetchData();
@@ -286,11 +330,12 @@ const ListenTest = () => {
             setIsFinished(true);
             setShowConfetti(true);
 
-            // Record test completion
+            // Record test completion and log activity
             try {
                 await axios.post(`${API_BASE}/stats/test-completed`);
+                await logTestTime();
             } catch (error) {
-                console.error('Failed to record test completion:', error);
+                console.error('Failed to record test completion or log test time:', error);
                 // Don't show error to user as this is not critical
             }
         }
@@ -318,24 +363,24 @@ const ListenTest = () => {
 
     if (isFinished) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
                 {showConfetti && <Confetti />}
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
-                        <h2 className="text-2xl font-bold mb-4">🎧 Listen Test Complete!</h2>
+                    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 w-full text-center">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900">Listen Test Complete!</h2>
                         <div className="mb-6 space-y-2">
-                            <p className="text-lg">You got <span className="font-bold text-indigo-600">{correctAnswers}</span> out of <span className="font-bold text-indigo-600">{totalQuestions}</span> correct!</p>
+                            <p className="text-lg text-gray-600">You got <span className="font-bold text-gray-900">{correctAnswers}</span> out of <span className="font-bold text-gray-900">{totalQuestions}</span> correct!</p>
                         </div>
                         <div className="space-y-3">
                             <button
-                                className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold text-lg shadow hover:bg-indigo-700 transition"
+                                className="w-full py-3 rounded-lg bg-gray-900 text-white font-semibold text-lg shadow-sm hover:bg-gray-800 transition"
                                 onClick={startTest}
                             >
                                 Try Again
                             </button>
                             <button
-                                className="w-full py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold text-lg shadow hover:bg-gray-300 transition"
-                                onClick={() => navigate('/')}
+                                className="w-full py-3 rounded-lg bg-white text-gray-900 border border-gray-300 font-semibold text-lg shadow-sm hover:bg-gray-50 transition"
+                                onClick={() => navigate('/', { state: getNavState() })}
                             >
                                 Back to Dashboard
                             </button>
@@ -348,16 +393,16 @@ const ListenTest = () => {
 
     if (questions.length === 0) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
-                        <h2 className="text-3xl font-bold mb-4">🎧 Listen Test</h2>
+                    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 w-full text-center">
+                        <h2 className="text-3xl font-bold mb-4 text-gray-900">Listen Test</h2>
                         <p className="text-gray-600 mb-6">
                             You need at least one learned word to start the Listen Test.
                         </p>
                         <button
-                            className="w-full py-4 rounded-xl bg-indigo-600 text-white font-semibold text-xl shadow-lg hover:bg-indigo-700 transition"
-                            onClick={() => navigate('/')}
+                            className="w-full py-4 rounded-lg bg-gray-900 text-white font-semibold text-xl shadow-sm hover:bg-gray-800 transition"
+                            onClick={() => navigate('/', { state: getNavState() })}
                         >
                             Back to Dashboard
                         </button>
@@ -370,11 +415,11 @@ const ListenTest = () => {
     const currentQ = questions[currentQuestion];
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
             <div className="w-full max-w-2xl mx-auto p-6">
 
                 {/* Question Card */}
-                <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 w-full">
                     <div className="text-center mb-6">
                         <h2 className="text-xl text-gray-600 mb-2">Listen to the audio</h2>
                     </div>
@@ -383,7 +428,7 @@ const ListenTest = () => {
                     <div className="flex justify-center mb-6">
                         <button
                             onClick={() => playAudio()}
-                            className="flex items-center gap-2 px-6 py-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors"
+                            className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                         >
                             <Volume2 className="w-5 h-5" />
                             <span>Play Audio</span>
@@ -392,14 +437,14 @@ const ListenTest = () => {
 
                     {/* Hanzi Display */}
                     <div className="text-center mb-6">
-                        <div className="text-6xl mb-2">{currentQ.word.chinese}</div>
+                        <div className="text-6xl mb-2 text-gray-900">{currentQ.word.chinese}</div>
                     </div>
 
                     <form onSubmit={handleSubmit}>
                         <input
                             ref={inputRef}
                             type="text"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg mb-4"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-lg mb-4"
                             placeholder="Enter pinyin..."
                             value={answer}
                             onChange={handleInputChange}
@@ -412,7 +457,7 @@ const ListenTest = () => {
                         <div className="flex gap-3">
                             <button
                                 type="submit"
-                                className="w-full py-3 bg-indigo-600 text-white font-semibold text-lg rounded-xl hover:bg-indigo-700 transition shadow-lg"
+                                className="w-full py-3 bg-gray-900 text-white font-semibold text-lg rounded-lg hover:bg-gray-800 transition shadow-sm"
                                 disabled={!answer.trim()}
                             >
                                 Submit
@@ -425,7 +470,7 @@ const ListenTest = () => {
                         <div className="mt-4 text-center">
                             <button
                                 onClick={handleShowHint}
-                                className="flex items-center gap-2 mx-auto px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+                                className="flex items-center gap-2 mx-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                             >
                                 <Lightbulb className="w-4 h-4" />
                                 <span>Need a hint?</span>
@@ -434,15 +479,15 @@ const ListenTest = () => {
                     )}
 
                     {showHint && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                            <p className="text-sm text-blue-600 mb-1">Hint:</p>
-                            <p className="text-lg font-mono text-blue-800">{hintText}</p>
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                            <p className="text-sm text-gray-600 mb-1">Hint:</p>
+                            <p className="text-lg font-mono text-gray-800">{hintText}</p>
                         </div>
                     )}
                     <div className="mt-6">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                                className="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
                                 style={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
                             ></div>
                         </div>

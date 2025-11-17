@@ -54,6 +54,23 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const Test = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Helper to get navigation state with challenge info preserved
+    const getNavState = () => {
+        const today = new Date().toISOString().split('T')[0];
+        const activeChallengeStr = localStorage.getItem(`activeChallenge_${today}`);
+        let navState: any = { from: 'test' };
+        if (activeChallengeStr) {
+            try {
+                const activeChallenge = JSON.parse(activeChallengeStr);
+                navState.challengeStepIndex = activeChallenge.stepIndex;
+                navState.from = 'daily-challenge';
+            } catch (e) {
+                // If parsing fails, just use 'test'
+            }
+        }
+        return navState;
+    };
     const [words, setWords] = useState<VocabWord[]>([]);
     const [currentIdx, setCurrentIdx] = useState(0);
     const [answer, setAnswer] = useState('');
@@ -108,12 +125,15 @@ const Test = () => {
 
     const logTestTime = async () => {
         try {
-            await axios.post(`${API_BASE}/vocabulary/log-activity`, {
+            const response = await axios.post(`${API_BASE}/vocabulary/log-activity`, {
                 type: 'test',
                 duration: testDuration
             });
-        } catch (error) {
+            console.log('Test activity logged successfully:', response.data);
+        } catch (error: any) {
             console.error('Failed to log test time:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            toast.error('Failed to log test activity');
         }
     };
 
@@ -124,7 +144,7 @@ const Test = () => {
                 const sessionRes = await axios.get(`${API_BASE}/session-progress`);
                 if (!sessionRes.data || sessionRes.data.currentSession < 1) {
                     toast.error('Complete at least 1 session before taking the test.');
-                    navigate('/');
+                    navigate('/', { state: getNavState() });
                     return;
                 }
                 // Check for recent test mode
@@ -140,7 +160,7 @@ const Test = () => {
                 });
                 if (learned.length < 10) {
                     toast.error('You need at least 10 learned words to take the test.');
-                    navigate('/');
+                    navigate('/', { state: getNavState() });
                     return;
                 }
                 const selected = pickRandom(learned, 10);
@@ -148,7 +168,7 @@ const Test = () => {
                 setLoading(false);
             } catch (error) {
                 toast.error('Failed to load test data.');
-                navigate('/');
+                navigate('/', { state: getNavState() });
             }
         };
         fetchData();
@@ -262,10 +282,10 @@ const Test = () => {
             <div className="min-h-screen flex flex-col items-center justify-center">
                 {showConfetti && <Confetti />}
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 w-full text-center">
                         <h2 className="text-2xl font-bold mb-4">🎉 Test Complete!</h2>
                         <p className="mb-6">You answered all 10 words correctly. Great job!</p>
-                        <button className="w-full py-3 rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition" onClick={() => navigate('/')}>Return to Dashboard</button>
+                        <button className="w-full py-3 rounded-lg bg-gray-900 text-white font-medium text-base shadow-sm hover:bg-gray-800 transition" onClick={() => navigate('/', { state: getNavState() })}>Return to Dashboard</button>
                     </div>
                 </div>
             </div>
@@ -286,10 +306,10 @@ const Test = () => {
                             <span className="text-4xl">{word.chinese}</span>
                             <button
                                 onClick={playAudio}
-                                className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full transition-colors"
+                                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                                 title="Listen to pronunciation"
                             >
-                                <Volume2 className="w-6 h-6 text-blue-600" />
+                                <Volume2 className="w-6 h-6 text-gray-700" />
                             </button>
                         </div>
                         <span className="text-lg text-gray-500">{word.pinyin}</span>
@@ -309,7 +329,7 @@ const Test = () => {
                             autoCorrect="off"
                             autoCapitalize="off"
                         />
-                        <button type="submit" className="rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition px-8 py-2 w-full" disabled={!!feedback || !answer.trim()}>
+                        <button type="submit" className="rounded-lg bg-gray-900 text-white font-medium text-base shadow-sm hover:bg-gray-800 transition px-8 py-2 w-full" disabled={!!feedback || !answer.trim()}>
                             {currentIdx === words.length - 1 ? 'Finish' : 'Next'}
                         </button>
                     </form>
@@ -318,7 +338,7 @@ const Test = () => {
                         <div className="mt-4 text-center">
                             <button
                                 onClick={handleShowHint}
-                                className="flex items-center gap-2 mx-auto px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
+                                className="flex items-center gap-2 mx-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                             >
                                 <Lightbulb className="w-4 h-4" />
                                 <span>Need a hint?</span>
@@ -327,15 +347,15 @@ const Test = () => {
                     )}
 
                     {showHint && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                            <p className="text-sm text-blue-600 mb-1">Hint:</p>
-                            <p className="text-lg font-mono text-blue-800">{hintText}</p>
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                            <p className="text-sm text-gray-600 mb-1">Hint:</p>
+                            <p className="text-lg font-mono text-gray-900">{hintText}</p>
                         </div>
                     )}
                     <div className="mt-6">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                                className="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
                                 style={{ width: `${((currentIdx + 1) / words.length) * 100}%` }}
                             ></div>
                         </div>
@@ -349,13 +369,13 @@ const Test = () => {
                     <div className={`transform ${feedback === 'correct' ? 'scale-100 opacity-100' : `scale-100 opacity-${feedbackOpacity * 100} transition-all duration-500 ease-out`
                         }`}>
                         {feedback === 'correct' && (
-                            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center shadow-2xl animate-bounce">
-                                <Check className="w-12 h-12 text-green-600" />
+                            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                                <Check className="w-12 h-12 text-gray-700" />
                             </div>
                         )}
                         {feedback === 'incorrect' && (
-                            <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center shadow-2xl animate-bounce">
-                                <X className="w-12 h-12 text-red-600" />
+                            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                                <X className="w-12 h-12 text-gray-700" />
                             </div>
                         )}
                     </div>

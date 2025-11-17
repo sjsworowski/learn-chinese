@@ -17,7 +17,7 @@ import MistakeTest from './pages/MistakeTest';
 function App() {
     return (
         <AuthProvider>
-            <div className="flex flex-col min-h-screen" style={{ background: 'linear-gradient(135deg, #ddeaff 0%, #f6e3fa 35%, #e6e3fa 70%, #fbeafd 100%)' }}>
+            <div className="flex flex-col min-h-screen bg-gray-50">
                 {/* Main content area */}
                 <main className="flex-grow flex-1">
                     <Routes>
@@ -69,7 +69,7 @@ function App() {
 
                 {/* Footer */}
                 <footer className="w-full p-4 text-center text-m text-gray-500">
-                    Version 1.0.8
+                    Version 1.0.9
                 </footer>
             </div>
         </AuthProvider>

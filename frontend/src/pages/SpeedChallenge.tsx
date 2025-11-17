@@ -367,27 +367,27 @@ const SpeedChallenge = () => {
     if (isFinished) {
         const finalScore = correctAnswersRef.current; // Use the ref value for display
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
                 {showConfetti && <Confetti />}
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
-                        <h2 className="text-2xl font-bold mb-4">🎯 Speed Challenge Complete!</h2>
+                    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 w-full text-center">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-900">Speed Challenge Complete!</h2>
                         <div className="mb-6 space-y-2">
-                            <p className="text-lg">You got <span className="font-bold text-indigo-600">{finalScore}</span> correct!</p>
+                            <p className="text-lg text-gray-600">You got <span className="font-bold text-gray-900">{finalScore}</span> correct!</p>
                             <p className="text-sm text-gray-600">Time used: {formatTime(60 - timeLeft)}</p>
                             {finalScore > highScore && (
-                                <p className="text-green-600 font-semibold">🏆 New High Score!</p>
+                                <p className="text-gray-900 font-semibold">New High Score!</p>
                             )}
                         </div>
                         <div className="space-y-3">
                             <button
-                                className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold text-lg shadow hover:bg-indigo-700 transition"
+                                className="w-full py-3 rounded-lg bg-gray-900 text-white font-semibold text-lg shadow-sm hover:bg-gray-800 transition"
                                 onClick={startGame}
                             >
                                 Play Again
                             </button>
                             <button
-                                className="w-full py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold text-lg shadow hover:bg-gray-300 transition"
+                                className="w-full py-3 rounded-lg bg-white text-gray-900 border border-gray-300 font-semibold text-lg shadow-sm hover:bg-gray-50 transition"
                                 onClick={() => navigate('/')}
                             >
                                 Back to Dashboard
@@ -401,20 +401,20 @@ const SpeedChallenge = () => {
 
     if (!isActive) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
-                        <h2 className="text-3xl font-bold mb-4">⚡ Speed Challenge</h2>
+                    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 w-full text-center">
+                        <h2 className="text-3xl font-bold mb-4 text-gray-900">Speed Challenge</h2>
                         <p className="text-gray-600 mb-6">
                             You have 60 seconds to answer as many questions as possible!
                             Mix of English→Pinyin and Pinyin→English questions.
                         </p>
-                        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-blue-600 mb-2">High Score: <span className="font-bold">{highScore}</span></p>
-                            <p className="text-xs text-blue-500">Words needed: 60+ learned</p>
+                        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                            <p className="text-sm text-gray-700 mb-2">High Score: <span className="font-bold">{highScore}</span></p>
+                            <p className="text-xs text-gray-600">Words needed: 60+ learned</p>
                         </div>
                         <button
-                            className="w-full py-4 rounded-xl bg-indigo-600 text-white font-semibold text-xl shadow-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                            className="w-full py-4 rounded-lg bg-gray-900 text-white font-semibold text-xl shadow-sm hover:bg-gray-800 transition flex items-center justify-center gap-2"
                             onClick={startGame}
                         >
                             <Play className="w-6 h-6" />
@@ -429,33 +429,33 @@ const SpeedChallenge = () => {
     const currentQ = questions[currentQuestion];
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
             <div className="w-full max-w-2xl mx-auto p-6">
                 {/* Header */}
-                <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-6 mb-6">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2">
-                            <Clock className="w-6 h-6 text-red-500" />
-                            <span className="text-2xl font-bold text-red-600">{formatTime(timeLeft)}</span>
+                            <Clock className="w-6 h-6 text-gray-600" />
+                            <span className="text-2xl font-bold text-gray-900">{formatTime(timeLeft)}</span>
                         </div>
                         <div className="text-right">
                             <div className="text-sm text-gray-600">Score</div>
-                            <div className="text-2xl font-bold text-indigo-600">{correctAnswers}</div>
+                            <div className="text-2xl font-bold text-gray-900">{correctAnswers}</div>
                         </div>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                            className="bg-red-500 h-2 rounded-full transition-all duration-1000"
+                            className="bg-gray-900 h-2 rounded-full transition-all duration-1000"
                             style={{ width: `${((60 - timeLeft) / 60) * 100}%` }}
                         ></div>
                     </div>
                 </div>
 
                 {/* Question Card */}
-                <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 w-full">
                     <div className="text-center mb-6">
                         <div className="mb-4">
-                            <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                            <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
                                 {currentQ.type === 'english-to-pinyin' ? 'English → Pinyin' : 'Pinyin → English'}
                             </span>
                         </div>
@@ -467,7 +467,7 @@ const SpeedChallenge = () => {
                         <input
                             ref={inputRef}
                             type="text"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg mb-4"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent text-lg mb-4"
                             placeholder={currentQ.type === 'english-to-pinyin' ? 'Enter pinyin...' : 'Enter English...'}
                             value={answer}
                             onChange={handleInputChange}
@@ -480,7 +480,7 @@ const SpeedChallenge = () => {
                         <div className="flex gap-3">
                             <button
                                 type="submit"
-                                className="flex-1 py-3 bg-indigo-600 text-white font-semibold text-lg rounded-xl hover:bg-indigo-700 transition shadow-lg"
+                                className="flex-1 py-3 bg-gray-900 text-white font-semibold text-lg rounded-lg hover:bg-gray-800 transition shadow-sm"
                                 disabled={!answer.trim()}
                             >
                                 Submit
@@ -488,7 +488,7 @@ const SpeedChallenge = () => {
                             <button
                                 type="button"
                                 onClick={moveToNextQuestion}
-                                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold text-lg rounded-xl hover:bg-gray-300 transition shadow-lg"
+                                className="px-6 py-3 bg-white text-gray-900 border border-gray-300 font-semibold text-lg rounded-lg hover:bg-gray-50 transition shadow-sm"
                             >
                                 Skip
                             </button>

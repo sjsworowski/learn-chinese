@@ -179,17 +179,53 @@ const Study = () => {
     };
 
     const logStudyTime = async () => {
+        const endpoint = `${API_BASE}/vocabulary/log-activity`;
+        const payload = {
+            type: 'study',
+            duration: studySession.sessionTime
+        };
+        
+        console.log('🔥 LOG STUDY TIME CALLED');
+        console.log('Endpoint:', endpoint);
+        console.log('Payload:', payload);
+        console.log('API_BASE:', API_BASE);
+        
         try {
-            await axios.post(`${API_BASE}/vocabulary/log-activity`, {
-                type: 'study',
-                duration: studySession.sessionTime
-            });
-        } catch (error) {
-            console.error('Failed to log study time:', error);
+            console.log('📤 Sending POST request to:', endpoint);
+            const response = await axios.post(endpoint, payload);
+            console.log('✅ SUCCESS! Study activity logged:', response.data);
+            console.log('Response status:', response.status);
+            return response.data;
+        } catch (error: any) {
+            console.error('❌❌❌ ERROR LOGGING STUDY ACTIVITY ❌❌❌');
+            console.error('Error object:', error);
+            console.error('Error type:', typeof error);
+            console.error('Has response?', !!error.response);
+            if (error.response) {
+                console.error('Response status:', error.response.status);
+                console.error('Response status text:', error.response.statusText);
+                console.error('Response data:', JSON.stringify(error.response.data, null, 2));
+                console.error('Response headers:', error.response.headers);
+            }
+            if (error.request) {
+                console.error('Request was made but no response:', error.request);
+            }
+            console.error('Error message:', error.message);
+            console.error('Error config URL:', error.config?.url);
+            console.error('Error config method:', error.config?.method);
+            console.error('Error config headers:', error.config?.headers);
+            
+            const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+            console.error('Error message to show:', errorMsg);
+            toast.error(`Failed to log study activity: ${errorMsg}`);
+            throw error; // Re-throw so caller knows it failed
         }
     };
 
     const handleReturnToDashboard = async () => {
+        // Log activity FIRST, even if session progress fails
+        await logStudyTime();
+        
         // Save completed session progress to backend only
         const nextSession = currentSession + 1;
         try {
@@ -199,8 +235,8 @@ const Study = () => {
                 wordsLearned: studySession.wordsLearned,
                 totalStudyTime: studySession.sessionTime
             });
-            await logStudyTime();
         } catch (error) {
+            console.error('Failed to save session progress:', error);
             toast.error('Failed to save session progress to backend. Please try again later.');
         }
 
@@ -231,21 +267,36 @@ const Study = () => {
     }
 
     const handleIntermediateSessionComplete = async () => {
+        // Log activity FIRST, even if session progress fails
+        await logStudyTime();
+        
         // Save current session progress before completing
         try {
             await axios.put(`${API_BASE}/session-progress`, {
-                currentSession: currentSession,
+                currentSession: currentSession + 1,
                 wordsStudied: studySession.wordsStudied,
                 wordsLearned: studySession.wordsLearned,
                 totalStudyTime: studySession.sessionTime
             });
-            await logStudyTime();
         } catch (error) {
+            console.error('Failed to save session progress:', error);
             toast.error('Failed to save session progress to backend. Please try again later.');
         }
 
-        // Navigate to dashboard
-        navigate('/', { state: { from: 'study' } });
+        // Navigate to dashboard - preserve challenge info if this was started from daily challenge
+        const today = new Date().toISOString().split('T')[0];
+        const activeChallengeStr = localStorage.getItem(`activeChallenge_${today}`);
+        let navState: any = { from: 'study' };
+        if (activeChallengeStr) {
+            try {
+                const activeChallenge = JSON.parse(activeChallengeStr);
+                navState.challengeStepIndex = activeChallenge.stepIndex;
+                navState.from = 'daily-challenge';
+            } catch (e) {
+                // If parsing fails, just use 'study'
+            }
+        }
+        navigate('/', { state: navState });
     };
 
     const handleCompleteSession = async () => {
@@ -253,16 +304,19 @@ const Study = () => {
         const totalSessions = Math.ceil(words.length / 10);
         const isFinalSession = currentSession + 1 >= totalSessions;
 
+        // Log activity FIRST, even if session progress fails
+        await logStudyTime();
+
         // Save current session progress before completing
         try {
             await axios.put(`${API_BASE}/session-progress`, {
-                currentSession: currentSession,
+                currentSession: currentSession + 1,
                 wordsStudied: studySession.wordsStudied,
                 wordsLearned: studySession.wordsLearned,
                 totalStudyTime: studySession.sessionTime
             });
-            await logStudyTime();
         } catch (error) {
+            console.error('Failed to save session progress:', error);
             toast.error('Failed to save session progress to backend. Please try again later.');
         }
 
@@ -282,10 +336,36 @@ const Study = () => {
                 wordsLearned: studySession.wordsLearned
             })
             toast.success('Session completed! Progress saved.')
-            navigate('/', { state: { from: 'study' } })
+            // Preserve challenge info if this was started from daily challenge
+            const today = new Date().toISOString().split('T')[0];
+            const activeChallengeStr = localStorage.getItem(`activeChallenge_${today}`);
+            let navState: any = { from: 'study' };
+            if (activeChallengeStr) {
+                try {
+                    const activeChallenge = JSON.parse(activeChallengeStr);
+                    navState.challengeStepIndex = activeChallenge.stepIndex;
+                    navState.from = 'daily-challenge';
+                } catch (e) {
+                    // If parsing fails, just use 'study'
+                }
+            }
+            navigate('/', { state: navState })
         } catch (error) {
             toast.success('Session completed! (offline mode)')
-            navigate('/', { state: { from: 'study' } })
+            // Preserve challenge info if this was started from daily challenge
+            const today = new Date().toISOString().split('T')[0];
+            const activeChallengeStr = localStorage.getItem(`activeChallenge_${today}`);
+            let navState: any = { from: 'study' };
+            if (activeChallengeStr) {
+                try {
+                    const activeChallenge = JSON.parse(activeChallengeStr);
+                    navState.challengeStepIndex = activeChallenge.stepIndex;
+                    navState.from = 'daily-challenge';
+                } catch (e) {
+                    // If parsing fails, just use 'study'
+                }
+            }
+            navigate('/', { state: navState })
         }
     }
 
@@ -321,7 +401,7 @@ const Study = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
             </div>
         )
     }
@@ -334,10 +414,10 @@ const Study = () => {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center">
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 w-full text-center">
                         <h2 className="text-2xl font-bold mb-4">🎉 Study Complete!</h2>
                         <p className="mb-6">You finished all study sessions. Great job!</p>
-                        <button className="w-full py-3 rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition" onClick={handleReturnToDashboard}>Return to Dashboard</button>
+                        <button className="w-full py-3 rounded-lg bg-gray-900 text-white font-medium text-base shadow-sm hover:bg-gray-800 transition" onClick={handleReturnToDashboard}>Return to Dashboard</button>
                     </div>
                 </div>
             </div>
@@ -375,10 +455,10 @@ const Study = () => {
         return (
             <div className="min-h-screen flex-1 flex flex-col items-center justify-center">
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full text-center">
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 w-full text-center">
                         <div className="mb-6">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-gray-700" />
                             </div>
                             <h2 className="text-3xl font-bold text-gray-900 mb-2">Session {currentSession + 1} Complete!</h2>
                             <p className="text-gray-600">Great job! You've completed session {currentSession + 1}.</p>
@@ -386,7 +466,7 @@ const Study = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-8">
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-green-600">{sessionWords.filter(w => w.isLearned).length}</div>
+                                <div className="text-2xl font-bold text-gray-900">{sessionWords.filter(w => w.isLearned).length}</div>
                                 <div className="text-sm text-gray-600">Words Learned</div>
                             </div>
                         </div>
@@ -424,13 +504,13 @@ const Study = () => {
                                 <span className="text-6xl">{currentWord.chinese}</span>
                                 <button
                                     onClick={playAudio}
-                                    className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full transition-colors"
+                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                                     title="Listen to pronunciation"
                                 >
-                                    <Volume2 className="w-6 h-6 text-blue-600" />
+                                    <Volume2 className="w-6 h-6 text-gray-700" />
                                 </button>
                             </div>
-                            <span className="text-3xl font-bold text-blue-700 mb-2">{currentWord.pinyin}</span>
+                            <span className="text-3xl font-bold text-gray-900 mb-2">{currentWord.pinyin}</span>
                             <span className="text-2xl text-gray-800 mb-6">{currentWord.english}</span>
                         </div>
                     )}
@@ -446,7 +526,7 @@ const Study = () => {
 
                         <button
                             onClick={handleNext}
-                            className="rounded-xl bg-indigo-200 text-indigo-700 font-semibold text-lg shadow hover:bg-indigo-300 transition px-4 py-2"
+                            className="rounded-lg bg-gray-900 text-white font-medium text-base shadow-sm hover:bg-gray-800 transition px-4 py-2"
                         >
                             {isLastWord ? 'Complete' : 'Next'}
                         </button>
@@ -456,7 +536,7 @@ const Study = () => {
                     <div className="mt-6">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
-                                className="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
                                 style={{ width: `${((currentIndex + 1) / sessionWords.length) * 100}%` }}
                             ></div>
                         </div>

@@ -28,10 +28,10 @@ const Login = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center">
                 <div className="w-full max-w-md mx-auto p-6">
-                    <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
+                    <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 w-full">
                         <div className="text-center">
-                            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-green-100">
-                                <Mail className="h-8 w-8 text-green-500" />
+                            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-gray-100">
+                                <Mail className="h-8 w-8 text-gray-700" />
                             </div>
                             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                                 Check your email
@@ -45,7 +45,7 @@ const Login = () => {
                             <button
                                 type="button"
                                 onClick={() => setEmailSent(false)}
-                                className="mt-6 text-indigo-600 hover:text-indigo-500 text-sm"
+                                className="mt-6 text-gray-700 hover:text-gray-900 text-sm"
                             >
                                 ← Back to sign in
                             </button>
@@ -59,10 +59,10 @@ const Login = () => {
     return (
         <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full max-w-md mx-auto p-6">
-                <div className="backdrop-blur-md bg-white border border-white/30 shadow-xl rounded-3xl p-8 w-full">
+                <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-8 w-full">
                     <div>
-                        <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-                            <BookOpen className="h-8 w-8 text-indigo-500" />
+                        <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-gray-100">
+                            <BookOpen className="h-8 w-8 text-gray-700" />
                         </div>
                         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                             Sign in to your account
@@ -96,7 +96,7 @@ const Login = () => {
                                 className="btn-primary w-full"
                             >
                                 {isLoading ? (
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
                                 ) : (
                                     'Send magic link'
                                 )}

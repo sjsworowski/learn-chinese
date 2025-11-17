@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle with minimalist gray -->
+  <circle cx="50" cy="50" r="45" fill="#111827"/>
+  
+  <!-- Chinese character 中 (zhōng - middle/Chinese) -->
+  <text x="50" y="68" font-family="serif, 'Noto Serif SC', 'SimSun', serif" font-size="52" fill="#ffffff" text-anchor="middle" font-weight="600">中</text>
+</svg>
+

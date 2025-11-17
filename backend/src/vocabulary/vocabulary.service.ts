@@ -71,13 +71,20 @@ export class VocabularyService {
         return vocab.map(word => ({ ...word, isLearned: true }));
     }
 
-    async logUserActivity(userId: string, type: 'study' | 'test', duration: number) {
-        const activity = this.testSessionRepository.manager.create('UserActivity', {
-            userId,
-            type,
-            duration
-        });
-        await this.testSessionRepository.manager.save('UserActivity', activity);
-        return { success: true };
+    async logUserActivity(userId: string, type: 'study' | 'test', duration?: number) {
+        try {
+            const activity = this.userActivityRepository.create({
+                userId,
+                type,
+                duration: duration || 0
+            });
+            const saved = await this.userActivityRepository.save(activity);
+            console.log(`✅ Activity logged successfully: id=${saved.id}, userId=${userId}, type=${type}, duration=${duration || 0}, createdAt=${saved.createdAt}`);
+            return { success: true, activityId: saved.id };
+        } catch (error: any) {
+            console.error(`❌ Failed to log activity: userId=${userId}, type=${type}, error=`, error);
+            console.error('Error stack:', error.stack);
+            throw error;
+        }
     }
 } 

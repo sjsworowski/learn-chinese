@@ -37,4 +37,9 @@ export class StatsController {
     async clearSpeedChallengeScores(@Request() req) {
         return this.statsService.clearSpeedChallengeScores(req.user.id);
     }
+
+    @Get('streak-details')
+    async getStreakDetails(@Request() req) {
+        return this.statsService.getStreakDetails(req.user.id);
+    }
 } 
