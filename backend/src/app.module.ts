@@ -24,7 +24,6 @@ import { MistakeModule } from './mistake/mistake.module';
 import { EmailReminderModule } from './email-reminder/email-reminder.module';
 import { EmailReminder } from './entities/email-reminder.entity';
 import { SchedulerModule } from './scheduler/scheduler.module';
-import { SchedulerService } from './scheduler/scheduler.service';
 
 
 @Module({
@@ -106,19 +105,5 @@ import { SchedulerService } from './scheduler/scheduler.service';
   ],
   controllers: [HealthController]
 })
-export class AppModule implements OnModuleInit {
-  private readonly logger = new Logger(AppModule.name);
-
-  constructor(
-    private readonly schedulerService: SchedulerService
-  ) {
-    this.logger.log('AppModule constructor - SchedulerService injected');
-  }
-
-  onModuleInit() {
-    this.logger.log('AppModule onModuleInit - SchedulerService should be instantiated');
-    if (this.schedulerService) {
-      this.logger.log('✅ SchedulerService is instantiated - cron jobs should be registered');
-    }
-  }
+export class AppModule {
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { CheckCircle, ArrowRight, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages, Volume2, Lock, BookOpen, Flame, Headphones, AlertCircle } from 'lucide-react';
+import { CheckCircle, ArrowRight, LogOut, TrendingUp, Clock, User, Menu, Zap, Brain, Type, Languages, Volume2, Lock, BookOpen, Flame, Headphones, AlertCircle, GraduationCap } from 'lucide-react';
 import axios from 'axios'
 import toast from 'react-hot-toast'
 /// <reference types="vite/client" />
@@ -507,7 +507,7 @@ const Dashboard = () => {
                             <div className="flex items-center justify-between w-full mt-6">
                                 <div className="relative group flex-1 flex justify-center">
                                     <div className="flex items-center gap-1 px-2 py-1 rounded-lg">
-                                        <CheckCircle className="w-4 h-4 text-gray-700" />
+                                        <GraduationCap className="w-4 h-4 text-gray-700" />
                                         <span className="text-sm font-semibold text-gray-900">{stats.learnedWords}</span>
                                     </div>
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -547,7 +547,7 @@ const Dashboard = () => {
                                 <div className="flex items-center gap-6">
                                     <div className="relative group">
                                         <div className="flex items-center gap-1 px-2 py-1 rounded-lg">
-                                            <CheckCircle className="w-4 h-4 text-gray-700" />
+                                            <GraduationCap className="w-4 h-4 text-gray-700" />
                                             <span className="text-sm font-semibold text-gray-900">{stats.learnedWords}</span>
                                         </div>
                                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -637,14 +637,14 @@ const Dashboard = () => {
                                 <div className="text-lg font-semibold text-gray-900 mb-6">Practice</div>
                                 {/* Main 2x2 grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {/* Flashcards */}
+                                    {/* Study Session */}
                                     <button
                                         onClick={() => navigate('/study')}
                                         className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
                                     >
-                                        <BookOpen className="w-8 h-8 text-gray-400 flex-shrink-0" />
+                                        <GraduationCap className="w-8 h-8 text-gray-400 flex-shrink-0" />
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-gray-900">Flashcards</span>
+                                            <span className="font-semibold text-gray-900">Study Session</span>
                                             <span className="text-sm text-gray-500">Spaced repetition</span>
                                         </div>
                                     </button>
@@ -862,14 +862,14 @@ const Dashboard = () => {
                             <div className="text-lg font-semibold text-gray-900 mb-6">Practice</div>
                             {/* Main 2x2 grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                {/* Flashcards */}
+                                {/* Study Session */}
                                 <button
                                     onClick={() => navigate('/study')}
                                     className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
                                 >
-                                    <BookOpen className="w-8 h-8 text-gray-400 flex-shrink-0" />
+                                    <GraduationCap className="w-8 h-8 text-gray-400 flex-shrink-0" />
                                     <div className="flex flex-col">
-                                        <span className="font-semibold text-gray-900">Flashcards</span>
+                                        <span className="font-semibold text-gray-900">Study Session</span>
                                         <span className="text-sm text-gray-500">Spaced repetition</span>
                                     </div>
                                 </button>

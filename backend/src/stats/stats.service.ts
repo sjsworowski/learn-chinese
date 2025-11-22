@@ -52,38 +52,65 @@ export class StatsService {
         const activityLogs = await this.userActivityRepository.find({ where: { userId } });
         const totalStudyTime = activityLogs.reduce((sum, log) => sum + (log.duration || 0), 0);
 
-        // Calculate current streak: consecutive days with at least one 'study' activity
-        // Count backwards from the most recent day with activity (not requiring today to be active)
-        const studyActivities = activityLogs
-            .filter(log => log.type === 'study')
-            .map(log => new Date(log.createdAt));
+        // Calculate current streak: consecutive days with any activity (study or test)
+        // Helper function to get YYYY-MM-DD in local timezone
+        const getLocalDateString = (date: Date): string => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
 
-        // Get unique days (YYYY-MM-DD) with study activity
-        const daysSet = new Set(studyActivities.map(date => date.toISOString().slice(0, 10)));
+        // Get all activities (study and test) and convert to local date strings
+        const allActivities = activityLogs.map(log => new Date(log.createdAt));
+
+        // Get unique days (YYYY-MM-DD) with any activity
+        const daysSet = new Set(allActivities.map(date => getLocalDateString(date)));
         const daysArr = Array.from(daysSet).sort(); // ascending order
 
         let streak = 0;
         
         if (daysArr.length > 0) {
-            // Start from the most recent day with activity (last in sorted array)
-            const mostRecentDay = daysArr[daysArr.length - 1];
-            const parseDate = (dateStr: string): Date => {
-                const [year, month, day] = dateStr.split('-').map(Number);
-                return new Date(year, month - 1, day);
-            };
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStr = getLocalDateString(today);
             
-            let currentDate = parseDate(mostRecentDay);
-            currentDate.setHours(0, 0, 0, 0);
+            // Determine the starting day for streak calculation
+            let startDate: Date;
             
-            // Count consecutive days backwards from the most recent day with activity
-            for (; ;) {
-                const ymd = currentDate.toISOString().slice(0, 10);
-                if (daysSet.has(ymd)) {
-                    streak++;
-                    // Move to previous day
-                    currentDate.setDate(currentDate.getDate() - 1);
+            if (daysSet.has(todayStr)) {
+                // Today has activity - count from today
+                startDate = new Date(today);
+            } else {
+                // Today doesn't have activity - check yesterday
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = getLocalDateString(yesterday);
+                
+                if (daysSet.has(yesterdayStr)) {
+                    // Yesterday has activity - preserve streak during the day
+                    startDate = new Date(yesterday);
                 } else {
-                    break;
+                    // Gap of 1+ days - streak is 0
+                    streak = 0;
+                    startDate = null;
+                }
+            }
+            
+            if (startDate) {
+                // Count consecutive days backwards from the start date
+                let currentDate = new Date(startDate);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                for (; ;) {
+                    const ymd = getLocalDateString(currentDate);
+                    if (daysSet.has(ymd)) {
+                        streak++;
+                        // Move to previous day
+                        currentDate.setDate(currentDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
                 }
             }
         }
@@ -172,28 +199,54 @@ export class StatsService {
         const daysSet = new Set(allActivities.map(date => getLocalDateString(date)));
         const daysArr = Array.from(daysSet).sort(); // ascending order for longest streak calculation
 
-        // Calculate current streak (starting from most recent day with activity, counting backwards)
+        // Calculate current streak
+        // Logic: 
+        // - If today has activity, count backwards from today
+        // - If today doesn't have activity but yesterday does, preserve streak (count from yesterday)
+        // - If there's a gap of 1+ days, streak is 0
         let currentStreak = 0;
         
         if (daysArr.length > 0) {
-            // Start from the most recent day with activity (last in sorted array)
-            const mostRecentDay = daysArr[daysArr.length - 1];
-            const parseDate = (dateStr: string): Date => {
-                const [year, month, day] = dateStr.split('-').map(Number);
-                return new Date(year, month - 1, day);
-            };
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayStr = getLocalDateString(today);
             
-            let currentDate = parseDate(mostRecentDay);
-            currentDate.setHours(0, 0, 0, 0);
+            // Determine the starting day for streak calculation
+            let startDate: Date;
             
-            // Count consecutive days backwards from the most recent day with activity
-            for (; ;) {
-                const ymd = getLocalDateString(currentDate);
-                if (daysSet.has(ymd)) {
-                    currentStreak++;
-                    currentDate.setDate(currentDate.getDate() - 1);
+            if (daysSet.has(todayStr)) {
+                // Today has activity - count from today
+                startDate = new Date(today);
+            } else {
+                // Today doesn't have activity - check yesterday
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = getLocalDateString(yesterday);
+                
+                if (daysSet.has(yesterdayStr)) {
+                    // Yesterday has activity - preserve streak during the day
+                    startDate = new Date(yesterday);
                 } else {
-                    break;
+                    // Gap of 1+ days - streak is 0
+                    currentStreak = 0;
+                    startDate = null;
+                }
+            }
+            
+            if (startDate) {
+                // Count consecutive days backwards from the start date
+                let currentDate = new Date(startDate);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                for (; ;) {
+                    const ymd = getLocalDateString(currentDate);
+                    if (daysSet.has(ymd)) {
+                        currentStreak++;
+                        // Move to previous day
+                        currentDate.setDate(currentDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
                 }
             }
         }

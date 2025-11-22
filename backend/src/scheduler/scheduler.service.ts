@@ -14,6 +14,14 @@ export class SchedulerService implements OnModuleInit {
         // This ensures the service is instantiated when the module loads
         this.logger.log('SchedulerService initialized - cron jobs registered');
         this.logger.log('Cron job scheduled: daily-email-reminders (every minute for testing)');
+        this.logger.log('SchedulerService onModuleInit completed - cron decorators should be processed');
+
+        // Test that the method exists and is callable
+        if (typeof this.handleDailyEmailReminders === 'function') {
+            this.logger.log('✅ handleDailyEmailReminders method is available');
+        } else {
+            this.logger.error('❌ handleDailyEmailReminders method is NOT available');
+        }
     }
 
     @Cron(CronExpression.EVERY_DAY_AT_8PM, {

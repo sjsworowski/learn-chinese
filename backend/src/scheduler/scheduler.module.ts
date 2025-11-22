@@ -25,6 +25,20 @@ export class SchedulerModule implements OnModuleInit {
         // Access the service to ensure it's created
         if (this.schedulerService) {
             this.logger.log('✅ SchedulerService is instantiated - cron jobs should be registered');
+            // Explicitly access a method to ensure the service is fully initialized
+            // This helps ensure decorators are processed
+            try {
+                const methodName = 'handleDailyEmailReminders';
+                if (typeof this.schedulerService[methodName] === 'function') {
+                    this.logger.log(`✅ ${methodName} method exists on SchedulerService`);
+                } else {
+                    this.logger.error(`❌ ${methodName} method does NOT exist on SchedulerService`);
+                }
+            } catch (error) {
+                this.logger.error('Error checking SchedulerService methods:', error);
+            }
+        } else {
+            this.logger.error('❌ SchedulerService is NOT instantiated');
         }
     }
 }
