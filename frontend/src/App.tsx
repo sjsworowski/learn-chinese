@@ -3,13 +3,14 @@ import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
 import Login from './pages/Login'
+import Register from './pages/Register'
+import VerifyEmail from './pages/VerifyEmail'
 import Dashboard from './pages/Dashboard'
 import Study from './pages/Study'
 import ProtectedRoute from './components/ProtectedRoute'
 import Test from './pages/Test'
 import PinyinTest from './pages/PinyinTest'
 import Profile from './pages/Profile'
-import MagicLinkVerify from './pages/MagicLinkVerify'
 import SpeedChallenge from './pages/SpeedChallenge';
 import ListenTest from './pages/ListenTest';
 import MistakeTest from './pages/MistakeTest';
@@ -22,7 +23,8 @@ function App() {
                 <main className="flex-grow flex-1">
                     <Routes>
                         <Route path="/login" element={<Login />} />
-                        <Route path="/auth/verify" element={<MagicLinkVerify />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/verify-email" element={<VerifyEmail />} />
                         <Route path="/speed-challenge" element={
                             <ProtectedRoute>
                                 <SpeedChallenge />
@@ -69,7 +71,7 @@ function App() {
 
                 {/* Footer */}
                 <footer className="w-full p-4 text-center text-m text-gray-500">
-                    Version 1.0.10
+                    Version 1.0.11
                 </footer>
             </div>
         </AuthProvider>

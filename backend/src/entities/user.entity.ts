@@ -20,6 +20,9 @@ export class User {
     @Column({ default: true })
     emailRemindersEnabled: boolean;
 
+    @Column({ default: false })
+    emailVerified: boolean;
+
     @CreateDateColumn()
     createdAt: Date;
 

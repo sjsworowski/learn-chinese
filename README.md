@@ -5,13 +5,13 @@ A full-stack Chinese vocabulary learning app with:
 - **Frontend:** React (Vite, TypeScript)
 - **Backend:** NestJS (TypeScript, TypeORM)
 - **Database:** PostgreSQL
-- **Authentication:** Magic Link (passwordless)
+- **Authentication:** Email and password
 - **Containerized:** Docker & Docker Compose
 
 ---
 
 ## Features
-- **Passwordless Authentication:** Magic link email authentication
+- **Authentication:** Email and password (register / sign in)
 - **Vocabulary Study:** Interactive flashcards and learning sessions
 - **Progress Tracking:** Detailed statistics and learning progress
 - **Testing System:** Multiple test types (vocabulary, pinyin)
@@ -26,7 +26,7 @@ A full-stack Chinese vocabulary learning app with:
 ### Prerequisites
 - [Docker](https://www.docker.com/get-started)
 - [Node.js](https://nodejs.org/) (for local dev, optional)
-- Gmail account for sending magic link emails
+- (Optional) Gmail account for reminder emails
 
 ### 1. Clone the Repository
 ```sh
@@ -47,7 +47,7 @@ POSTGRES_DB=postgres
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 
-# Email Configuration (for magic link authentication)
+# Email (optional, for reminder emails only)
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASSWORD=your-app-password
 
@@ -68,15 +68,7 @@ PGADMIN_DEFAULT_PASSWORD=admin
 NODE_ENV=development
 ```
 
-### 3. Gmail Setup for Magic Links
-1. **Enable 2-Factor Authentication** on your Gmail account
-2. **Generate an App Password:**
-   - Go to Google Account settings
-   - Security → 2-Step Verification → App passwords
-   - Generate a new app password for "Mail"
-   - Use this password in `EMAIL_PASSWORD` (not your regular Gmail password)
-
-### 4. Run the Full Stack with Docker Compose
+### 3. Run the Full Stack with Docker Compose
 ```sh
 docker-compose up --build
 ```
@@ -88,18 +80,15 @@ docker-compose up --build
 
 ## Authentication Flow
 
-### Magic Link Authentication
-1. **Enter Email:** User enters email on login page
-2. **Send Magic Link:** Backend sends secure magic link via email
-3. **Click Link:** User clicks link in email
-4. **Auto Login:** User is automatically logged in and redirected to dashboard
-5. **Auto Registration:** New users are automatically created on first magic link use
+### Email & Password
+1. **Register:** Create an account with email, password, and optional username
+2. **Sign in:** Use email and password on the login page
+3. **Session:** JWT tokens with optional "Remember me" (longer expiry)
 
-### Security Features
-- Magic links expire after 15 minutes
-- JWT tokens for session management
-- Passwordless authentication eliminates password security risks
-- Email verification ensures user owns the email address
+### Security
+- Passwords hashed with bcrypt
+- JWT for session management
+- Existing users who had no password (legacy) can register again with the same email to set a password
 
 ---
 
@@ -122,8 +111,8 @@ docker-compose exec backend npm run migration:run
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/magic-link/send` - Send magic link email
-- `POST /api/auth/magic-link/verify` - Verify magic link token
+- `POST /api/auth/register` - Register (email, password, optional username)
+- `POST /api/auth/login` - Sign in (email, password, optional rememberMe)
 - `GET /api/auth/me` - Get current user profile
 
 ### Vocabulary
@@ -158,7 +147,7 @@ npm run dev
 
 ### Database Seeding
 The app automatically seeds the database with:
-- Demo user (test@example.com)
+- Demo user: (test@example.com)
 - Chinese vocabulary from vocab.json
 - User progress tracking
 
@@ -175,17 +164,25 @@ The app automatically seeds the database with:
 - Set up HTTPS/SSL (via reverse proxy or cloud load balancer).
 - Restrict backend CORS to your frontend's production domain.
 - Ensure Postgres data is stored in a Docker volume or managed DB.
-- Configure Gmail app password for production email sending.
+- Configure EMAIL_USER/EMAIL_PASSWORD for reminder emails if desired.
+- For **daily reminder emails in cloud**: see "Reminder emails in cloud" below.
 - Add monitoring/logging as needed.
 
 ---
 
 ## Troubleshooting
 
-### Magic Link Issues
-- **Email not received:** Check spam folder, verify Gmail app password
-- **Link expired:** Magic links expire after 15 minutes, request a new one
-- **Authentication errors:** Ensure JWT_SECRET is consistent across restarts
+### Reminder emails in cloud
+Daily reminder emails are sent by an in-process cron (8pm UTC). **On cloud, the app is often asleep or serverless**, so the cron may never run. To fix:
+1. Set **CRON_SECRET** in your backend environment (e.g. a random string).
+2. Use an external scheduler (e.g. [cron-job.org](https://cron-job.org)) to call once per day:
+   - **URL:** `POST https://your-backend-url/api/email-reminders/cron/daily`
+   - **Header:** `X-Cron-Secret: <your CRON_SECRET>`
+3. Ensure **EMAIL_USER** and **EMAIL_PASSWORD** are set in the cloud environment so the backend can send mail.
+
+### Auth / login
+- **Invalid email or password:** Ensure the user has registered; existing users without a password can sign up again with the same email to set one.
+- **Authentication errors:** Ensure JWT_SECRET is consistent across restarts.
 
 ### General Issues
 - If containers fail to start, check your `.env` values and logs.
@@ -209,7 +206,7 @@ The app automatically seeds the database with:
 - **Frontend**: Firebase Hosting (free tier)
 - **Backend**: Cloud Run (free tier)
 - **Database**: Firestore or Cloud SQL (free tier)
-- **Authentication**: Magic Link via Gmail (free tier)
+- **Authentication**: Email/password (no external service needed)
 - **SSL certificates**: Automatically provided
 - **Custom domains**: Supported
 

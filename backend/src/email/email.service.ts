@@ -35,20 +35,19 @@ export class EmailService {
         await transporter.sendMail(mailOptions);
     }
 
-    async sendMagicLinkEmail(email: string, loginUrl: string): Promise<void> {
-        const subject = 'Login to Learn Chinese';
+    async sendVerificationEmail(email: string, verifyUrl: string): Promise<void> {
+        const subject = 'Verify your email – Learn Chinese';
         const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #4f46e5;">Welcome to Learn Chinese!</h2>
-                <p>Click the button below to sign in to your account:</p>
-                <a href="${loginUrl}" 
-                   style="display: inline-block; background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-                    Sign In to Learn Chinese
+                <h2 style="color: #111;">Verify your email address</h2>
+                <p>Thanks for signing up. Please click the button below to verify your email and start learning.</p>
+                <a href="${verifyUrl}"
+                   style="display: inline-block; background-color: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+                    Verify email address
                 </a>
-                <p style="color: #666; font-size: 14px;">This link will expire in 15 minutes.</p>
+                <p style="color: #666; font-size: 14px;">This link expires in 24 hours. If you didn't create an account, you can ignore this email.</p>
             </div>
         `;
-
         await this.sendEmail(email, subject, html);
     }
 } 

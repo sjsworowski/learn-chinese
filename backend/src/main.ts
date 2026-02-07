@@ -1,5 +1,8 @@
 import * as dotenv from 'dotenv';
-dotenv.config(); // Load .env file first
+import * as path from 'path';
+
+dotenv.config(); // Load .env from cwd (e.g. backend/.env)
+dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') }); // Also load repo root .env if running from backend/
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';

@@ -52,6 +52,13 @@ export class EmailReminderService {
                 await this.emailReminderRepository.save(reminder);
             }
 
+            // At most one reminder per user per calendar day (UTC) — avoids duplicates if both in-process cron and external cron run
+            const todayUtc = new Date().toISOString().slice(0, 10);
+            const lastSentUtc = reminder.lastReminderSent?.toISOString().slice(0, 10);
+            if (lastSentUtc === todayUtc) {
+                return;
+            }
+
             // Check if streak hasn't increased since last reminder
             if (currentStreak <= reminder.lastStreakCount) {
                 console.log(`Sending reminder to user ${user.email} - streak: ${currentStreak}`);

@@ -19,18 +19,24 @@ export async function seedDatabaseIfNeeded(dataSource: DataSource) {
         const userCount = await userRepo.count();
         console.log('Current user count:', userCount);
 
-        // Always ensure demo user exists (without password for magic link auth)
+        // Always ensure demo user exists (with password for email/password auth)
         const demoEmail = 'test@example.com';
+        const demoPassword = 'demo123'; // Change in production or use env
+        const bcrypt = await import('bcryptjs');
         let user = await userRepo.findOne({ where: { email: demoEmail } });
         if (!user) {
             user = userRepo.create({
                 email: demoEmail,
                 username: 'DemoUser',
-                password: null, // No password needed for magic link authentication
-                emailRemindersEnabled: true, // Enable email reminders by default
+                password: await bcrypt.hash(demoPassword, 10),
+                emailRemindersEnabled: true,
             });
             user = await userRepo.save(user);
             console.log('Demo user created with ID:', user.id);
+        } else if (!user.password) {
+            user.password = await bcrypt.hash(demoPassword, 10);
+            await userRepo.save(user);
+            console.log('Demo user password set');
         } else {
             console.log('Demo user already exists with ID:', user.id);
         }
