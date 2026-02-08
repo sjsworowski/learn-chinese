@@ -17,28 +17,46 @@ export class EmailReminderService {
         private emailService: EmailService
     ) { }
 
-    async checkAndSendReminders() {
+    async checkAndSendReminders(): Promise<{
+        usersWithRemindersEnabled: number;
+        remindersSent: number;
+        skippedAlreadySentToday: number;
+        skippedStreakIncreased: number;
+        errors: number;
+    }> {
+        const summary = {
+            usersWithRemindersEnabled: 0,
+            remindersSent: 0,
+            skippedAlreadySentToday: 0,
+            skippedStreakIncreased: 0,
+            errors: 0,
+        };
         console.log('Starting daily email reminder check...');
 
-        // Get all users with email reminders enabled
         const users = await this.userRepository.find({
             where: { emailRemindersEnabled: true }
         });
 
+        summary.usersWithRemindersEnabled = users.length;
         console.log(`Found ${users.length} users with email reminders enabled`);
 
         for (const user of users) {
-            await this.checkUserStreak(user);
+            const result = await this.checkUserStreak(user);
+            if (result === 'sent') summary.remindersSent++;
+            else if (result === 'skipped_already_sent') summary.skippedAlreadySentToday++;
+            else if (result === 'skipped_streak_increased') summary.skippedStreakIncreased++;
+            else if (result === 'error') summary.errors++;
         }
+
+        console.log('Daily reminders summary:', summary);
+        return summary;
     }
 
-    private async checkUserStreak(user: User) {
+    private async checkUserStreak(user: User): Promise<'sent' | 'skipped_already_sent' | 'skipped_streak_increased' | 'error'> {
         try {
-            // Get user's current stats
             const stats = await this.statsService.getStatsForUser(user.id);
             const currentStreak = stats.currentStreak;
 
-            // Get or create email reminder record
             let reminder = await this.emailReminderRepository.findOne({
                 where: { userId: user.id }
             });
@@ -52,36 +70,41 @@ export class EmailReminderService {
                 await this.emailReminderRepository.save(reminder);
             }
 
-            // At most one reminder per user per calendar day (UTC) — avoids duplicates if both in-process cron and external cron run
             const todayUtc = new Date().toISOString().slice(0, 10);
             const lastSentUtc = reminder.lastReminderSent?.toISOString().slice(0, 10);
             if (lastSentUtc === todayUtc) {
-                return;
+                return 'skipped_already_sent';
             }
 
-            // Check if streak hasn't increased since last reminder
             if (currentStreak <= reminder.lastStreakCount) {
                 console.log(`Sending reminder to user ${user.email} - streak: ${currentStreak}`);
-                await this.sendReminderEmail(user, currentStreak);
-                await this.updateLastReminderSent(reminder.id, currentStreak);
-            } else {
-                // Update last streak count if it has increased
-                await this.updateLastStreakCount(reminder.id, currentStreak);
+                const sent = await this.sendReminderEmail(user, currentStreak);
+                if (sent) {
+                    await this.updateLastReminderSent(reminder.id, currentStreak);
+                    return 'sent';
+                }
+                return 'error';
             }
+
+            await this.updateLastStreakCount(reminder.id, currentStreak);
+            return 'skipped_streak_increased';
         } catch (error) {
             console.error(`Error checking streak for user ${user.email}:`, error);
+            return 'error';
         }
     }
 
-    private async sendReminderEmail(user: User, currentStreak: number) {
+    private async sendReminderEmail(user: User, currentStreak: number): Promise<boolean> {
         const subject = `Don't break your ${currentStreak}-day streak! 🔥`;
         const html = this.generateReminderEmail(user, currentStreak);
 
         try {
             await this.emailService.sendEmail(user.email, subject, html);
             console.log(`Reminder email sent to ${user.email}`);
+            return true;
         } catch (error) {
             console.error(`Failed to send reminder email to ${user.email}:`, error);
+            return false;
         }
     }
 
