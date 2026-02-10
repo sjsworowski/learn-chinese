@@ -103,6 +103,9 @@ const MistakeTest = () => {
     const [incorrectAttempts, setIncorrectAttempts] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [hintText, setHintText] = useState('');
+    const [postHintIncorrectAttempts, setPostHintIncorrectAttempts] = useState(0);
+    const [revealAnswer, setRevealAnswer] = useState(false);
+    const [firstAnswerRaw, setFirstAnswerRaw] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -261,6 +264,10 @@ const MistakeTest = () => {
             setFeedbackOpacity(1);
             setIncorrectAttempts(prev => prev + 1);
 
+            if (showHint) {
+                setPostHintIncorrectAttempts(prev => prev + 1);
+            }
+
             // Clear answer but don't move to next question automatically
             setAnswer('');
 
@@ -341,8 +348,24 @@ const MistakeTest = () => {
 
     const handleShowHint = () => {
         const currentQ = questions[currentQuestion];
-        setHintText(createHint(currentQ.answer));
+        // Prepare the raw answer for reveal depending on question type
+        let raw: string;
+        if (currentQ.type === 'english') {
+            raw = stripParens(currentQ.answer.split(';')[0].trim());
+        } else {
+            raw = currentQ.answer;
+        }
+        setFirstAnswerRaw(raw);
+        setHintText(createHint(raw));
         setShowHint(true);
+        setPostHintIncorrectAttempts(0);
+        setRevealAnswer(false);
+    };
+
+    const handleRevealNow = () => setRevealAnswer(true);
+
+    const continueAfterReveal = () => {
+        moveToNextQuestion();
     };
 
     // Reset hint state when question changes
@@ -350,6 +373,9 @@ const MistakeTest = () => {
         setIncorrectAttempts(0);
         setShowHint(false);
         setHintText('');
+        setPostHintIncorrectAttempts(0);
+        setRevealAnswer(false);
+        setFirstAnswerRaw(null);
     }, [currentQuestion]);
 
     // Auto-play audio for listen-test questions
@@ -525,10 +551,37 @@ const MistakeTest = () => {
                         </div>
                     )}
 
-                    {showHint && (
+                    {showHint && !revealAnswer && (
                         <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
                             <p className="text-sm text-gray-600 mb-1">Hint:</p>
                             <p className="text-lg font-mono text-gray-800">{hintText}</p>
+                            <div className="mt-3">
+                                {postHintIncorrectAttempts >= 3 ? (
+                                    <button
+                                        onClick={handleRevealNow}
+                                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Reveal Answer
+                                    </button>
+                                ) : (
+                                    <p className="text-xs text-gray-500 mt-2">Wrong tries after hint: {postHintIncorrectAttempts}/3</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {showHint && revealAnswer && (
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                            <p className="text-sm text-gray-600 mb-1">Answer:</p>
+                            <p className="text-lg font-mono text-gray-900 mb-3">{firstAnswerRaw}</p>
+                            <div>
+                                <button
+                                    onClick={continueAfterReveal}
+                                    className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                >
+                                    Continue
+                                </button>
+                            </div>
                         </div>
                     )}
 

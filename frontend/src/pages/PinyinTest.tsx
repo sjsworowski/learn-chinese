@@ -80,6 +80,9 @@ const PinyinTest = () => {
     const [incorrectAttempts, setIncorrectAttempts] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [hintText, setHintText] = useState('');
+    const [postHintIncorrectAttempts, setPostHintIncorrectAttempts] = useState(0);
+    const [revealAnswer, setRevealAnswer] = useState(false);
+    const [firstAnswerRaw, setFirstAnswerRaw] = useState<string | null>(null);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -114,6 +117,9 @@ const PinyinTest = () => {
         setIncorrectAttempts(0);
         setShowHint(false);
         setHintText('');
+        setPostHintIncorrectAttempts(0);
+        setRevealAnswer(false);
+        setFirstAnswerRaw(null);
     }, [currentIdx]);
 
     const logTestTime = async () => {
@@ -197,6 +203,10 @@ const PinyinTest = () => {
             setFeedbackOpacity(1);
             setIncorrectAttempts(prev => prev + 1);
 
+            if (showHint) {
+                setPostHintIncorrectAttempts(prev => prev + 1);
+            }
+
             // Record mistake
             try {
                 await axios.post(`${API_BASE}/mistakes/record`, {
@@ -210,7 +220,9 @@ const PinyinTest = () => {
 
             // Show hint after 3 incorrect attempts
             if (incorrectAttempts === 2) { // This will be the 3rd attempt
-                setHintText(createPinyinHint(words[currentIdx].pinyin));
+                const raw = words[currentIdx].pinyin;
+                setFirstAnswerRaw(raw);
+                setHintText(createPinyinHint(raw));
             }
 
             setTimeout(() => {
@@ -230,6 +242,24 @@ const PinyinTest = () => {
 
     const handleShowHint = () => {
         setShowHint(true);
+        setPostHintIncorrectAttempts(0);
+        setRevealAnswer(false);
+    };
+
+    const handleRevealNow = () => setRevealAnswer(true);
+
+    const continueAfterReveal = () => {
+        if (currentIdx === words.length - 1) {
+            setCompleted(true);
+            return;
+        }
+        setCurrentIdx(idx => idx + 1);
+        setAnswer('');
+        setRevealAnswer(false);
+        setPostHintIncorrectAttempts(0);
+        setFirstAnswerRaw(null);
+        setShowHint(false);
+        setHintText('');
     };
 
     // Helper to format seconds as mm:ss
@@ -303,10 +333,37 @@ const PinyinTest = () => {
                         </div>
                     )}
 
-                    {showHint && (
+                    {showHint && !revealAnswer && (
                         <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
                             <p className="text-sm text-gray-600 mb-1">Hint:</p>
                             <p className="text-lg font-mono text-gray-800">{hintText}</p>
+                            <div className="mt-3">
+                                {postHintIncorrectAttempts >= 3 ? (
+                                    <button
+                                        onClick={handleRevealNow}
+                                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Reveal Answer
+                                    </button>
+                                ) : (
+                                    <p className="text-xs text-gray-500 mt-2">Wrong tries after hint: {postHintIncorrectAttempts}/3</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {showHint && revealAnswer && (
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                            <p className="text-sm text-gray-600 mb-1">Answer:</p>
+                            <p className="text-lg font-mono text-gray-900 mb-3">{firstAnswerRaw}</p>
+                            <div>
+                                <button
+                                    onClick={continueAfterReveal}
+                                    className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                                >
+                                    Continue
+                                </button>
+                            </div>
                         </div>
                     )}
                     <div className="mt-6">

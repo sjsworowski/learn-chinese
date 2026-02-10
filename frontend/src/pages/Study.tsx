@@ -369,8 +369,7 @@ const Study = () => {
         }
     }
 
-    const playAudio = async () => {
-        if (!currentWord) return;
+    const playAudioForText = async (chineseText: string) => {
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE}/tts`, {
@@ -379,7 +378,7 @@ const Study = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ text: currentWord.chinese }),
+                body: JSON.stringify({ text: chineseText }),
             });
             if (!response.ok) throw new Error('Failed to fetch audio');
             const audioBlob = await response.blob();
@@ -390,6 +389,19 @@ const Study = () => {
             toast.error('Failed to play audio. Please try again.');
         }
     }
+
+    const playAudio = async () => {
+        if (!currentWord) return;
+        await playAudioForText(currentWord.chinese);
+    }
+
+    // Play sound once when a new word is shown
+    useEffect(() => {
+        if (isLoading || sessionComplete || sessionFinished || sessionWords.length === 0) return;
+        const word = sessionWords[currentIndex];
+        if (!word?.chinese) return;
+        playAudioForText(word.chinese);
+    }, [currentIndex, sessionWords])
 
     // Helper to format seconds as mm:ss
     const formatTime = (seconds: number) => {
