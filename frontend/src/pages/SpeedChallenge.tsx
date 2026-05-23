@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Clock, Check, X, Play, Pause, RotateCcw } from 'lucide-react';
 import Confetti from '../components/Confetti';
 import { useAuth } from '../contexts/AuthContext';
+import { playCorrectSound } from '../components/playCorrectSound';
 
 interface VocabWord {
     id: string;
@@ -247,6 +248,7 @@ const SpeedChallenge = () => {
                 });
                 setFeedback('correct');
                 setFeedbackOpacity(1);
+                playCorrectSound();
 
                 // Clear answer
                 setAnswer('');
@@ -298,7 +300,7 @@ const SpeedChallenge = () => {
                 });
                 setFeedback('correct');
                 setFeedbackOpacity(1);
-
+                playCorrectSound();
                 // Clear answer
                 setAnswer('');
 

@@ -88,7 +88,7 @@ const Dashboard = () => {
     const [streakDetails, setStreakDetails] = useState({
         currentStreak: 0,
         longestStreak: 0,
-        last30Days: [] as { date: string; hasActivity: boolean }[]
+        last30Days: [] as { date: string; hasActivity: boolean; activityCount?: number }[]
     });
     const [sessionProgress, setSessionProgress] = useState({
         currentSession: 0,
@@ -636,11 +636,11 @@ const Dashboard = () => {
                             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                                 <div className="text-lg font-semibold text-gray-900 mb-6">Practice</div>
                                 {/* Main 2x2 grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div className="grid grid-cols-2 gap-4 mb-4">
                                     {/* Study Session */}
                                     <button
                                         onClick={() => navigate('/study')}
-                                        className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                        className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
                                     >
                                         <GraduationCap className="w-8 h-8 text-gray-400 flex-shrink-0" />
                                         <div className="flex flex-col">
@@ -652,7 +652,7 @@ const Dashboard = () => {
                                     {/* Pinyin */}
                                     <button
                                         onClick={() => navigate('/pinyin-test')}
-                                        className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                        className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
                                     >
                                         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                                             <span className="text-3xl text-gray-400" style={{ fontFamily: 'serif, "Noto Serif SC", "SimSun", serif' }}>拼</span>
@@ -666,7 +666,7 @@ const Dashboard = () => {
                                     {/* Listening Test */}
                                     <button
                                         onClick={() => navigate('/listen-test')}
-                                        className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                        className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
                                     >
                                         <Headphones className="w-8 h-8 text-gray-400 flex-shrink-0" />
                                         <div className="flex flex-col">
@@ -678,7 +678,7 @@ const Dashboard = () => {
                                     {/* Translation Test */}
                                     <button
                                         onClick={() => navigate('/test')}
-                                        className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                        className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
                                     >
                                         <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                                             <span className="text-3xl text-gray-400" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontWeight: 400 }}>A</span>
@@ -691,7 +691,7 @@ const Dashboard = () => {
                                 </div>
 
                                 {/* Speed Challenge and Mistake Test */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-4">
                                     <button
                                         onClick={() => navigate('/speed-challenge')}
                                         disabled={stats.learnedWords < 60}
@@ -759,19 +759,22 @@ const Dashboard = () => {
                                             streakDetails.last30Days.map((day, index) => {
                                                 const today = new Date().toISOString().split('T')[0];
                                                 const isToday = day.date === today;
-                                                const intensity = day.hasActivity
-                                                    ? (isToday ? 'bg-gray-900' : 'bg-gray-400')
+                                                const count = day.activityCount ?? (day.hasActivity ? 1 : 0);
+                                                const intensity = isToday && count > 0
+                                                    ? 'bg-gray-900'
+                                                    : count >= 4 ? 'bg-gray-600'
+                                                    : count >= 2 ? 'bg-gray-400'
+                                                    : count >= 1 ? 'bg-gray-300'
                                                     : 'bg-gray-100';
                                                 return (
                                                     <div
                                                         key={index}
-                                                        className={`aspect-square rounded-md ${intensity}`}
-                                                        title={day.date}
+                                                        className={`aspect-square rounded-md ${intensity} transition-colors`}
+                                                        title={`${day.date}${count > 0 ? ` · ${count} activit${count === 1 ? 'y' : 'ies'}` : ''}`}
                                                     />
                                                 );
                                             })
                                         ) : (
-                                            // Fallback: show 30 empty squares if no data
                                             Array.from({ length: 30 }).map((_, index) => (
                                                 <div
                                                     key={index}
@@ -805,6 +808,17 @@ const Dashboard = () => {
                                         );
                                     })}
                                 </div>
+                            </div>
+                            {/* Row 3: Vocabulary Browser */}
+                            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-1">Learned Words</h3>
+                                <p className="text-sm text-gray-500 mb-4">Browse, search and replay all {allWords.length > 0 ? allWords.filter((w: any) => w.isLearned).length : 0} words you've learned</p>
+                                <button
+                                    onClick={() => navigate('/vocab')}
+                                    className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition"
+                                >
+                                    Open Vocabulary
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -861,77 +875,73 @@ const Dashboard = () => {
                         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                             <div className="text-lg font-semibold text-gray-900 mb-6">Practice</div>
                             {/* Main 2x2 grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div className="grid grid-cols-2 gap-4 mb-4">
                                 {/* Study Session */}
                                 <button
                                     onClick={() => navigate('/study')}
-                                    className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                    className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center text-center gap-2"
                                 >
-                                    <GraduationCap className="w-8 h-8 text-gray-400 flex-shrink-0" />
+                                    <GraduationCap className="w-10 h-10 text-gray-400" />
                                     <div className="flex flex-col">
-                                        <span className="font-semibold text-gray-900">Study Session</span>
-                                        <span className="text-sm text-gray-500">Spaced repetition</span>
+                                        <span className="font-semibold text-gray-900 text-sm">Study Session</span>
+                                        <span className="text-xs text-gray-500">Spaced repetition</span>
                                     </div>
                                 </button>
 
                                 {/* Pinyin */}
                                 <button
                                     onClick={() => navigate('/pinyin-test')}
-                                    className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                    className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center text-center gap-2"
                                 >
-                                    <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-3xl text-gray-400" style={{ fontFamily: 'serif, "Noto Serif SC", "SimSun", serif' }}>拼</span>
-                                    </div>
+                                    <span className="text-4xl text-gray-400" style={{ fontFamily: 'serif, "Noto Serif SC", "SimSun", serif' }}>拼</span>
                                     <div className="flex flex-col">
-                                        <span className="font-semibold text-gray-900">Pinyin Test</span>
-                                        <span className="text-sm text-gray-500">Enter the Pinyin translation</span>
+                                        <span className="font-semibold text-gray-900 text-sm">Pinyin Test</span>
+                                        <span className="text-xs text-gray-500">Enter Pinyin</span>
                                     </div>
                                 </button>
 
                                 {/* Listening Test */}
                                 <button
                                     onClick={() => navigate('/listen-test')}
-                                    className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                    className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center text-center gap-2"
                                 >
-                                    <Headphones className="w-8 h-8 text-gray-400 flex-shrink-0" />
+                                    <Headphones className="w-10 h-10 text-gray-400" />
                                     <div className="flex flex-col">
-                                        <span className="font-semibold text-gray-900">Listening Test</span>
-                                        <span className="text-sm text-gray-500">Audio recognition</span>
+                                        <span className="font-semibold text-gray-900 text-sm">Listening Test</span>
+                                        <span className="text-xs text-gray-500">Audio recognition</span>
                                     </div>
                                 </button>
 
                                 {/* Translation Test */}
                                 <button
                                     onClick={() => navigate('/test')}
-                                    className="p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-row items-center text-left gap-4"
+                                    className="p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center text-center gap-2"
                                 >
-                                    <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-3xl text-gray-400" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontWeight: 400 }}>A</span>
-                                    </div>
+                                    <span className="text-4xl text-gray-400" style={{ fontFamily: '"Georgia", "Times New Roman", serif', fontWeight: 400 }}>A</span>
                                     <div className="flex flex-col">
-                                        <span className="font-semibold text-gray-900">Translation Test</span>
-                                        <span className="text-sm text-gray-500">Enter the English translation</span>
+                                        <span className="font-semibold text-gray-900 text-sm">Translation Test</span>
+                                        <span className="text-xs text-gray-500">Enter English</span>
                                     </div>
                                 </button>
                             </div>
 
                             {/* Speed Challenge and Mistake Test */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <button
                                     onClick={() => navigate('/speed-challenge')}
                                     disabled={stats.learnedWords < 60}
-                                    className={`w-full p-6 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 flex flex-row items-center text-left gap-4 ${stats.learnedWords >= 60
+                                    className={`w-full p-4 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 flex flex-col items-center text-center gap-2 ${stats.learnedWords >= 60
                                         ? 'bg-white hover:shadow-md'
                                         : 'bg-gray-50 opacity-60 cursor-not-allowed'
                                         }`}
                                 >
-                                    <Zap className={`w-8 h-8 flex-shrink-0 ${stats.learnedWords >= 60 ? 'text-gray-400' : 'text-gray-300'}`} />
+                                    <Zap className={`w-10 h-10 ${stats.learnedWords >= 60 ? 'text-gray-400' : 'text-gray-300'}`} />
                                     <div className="flex flex-col">
-                                        <span className={`font-semibold ${stats.learnedWords >= 60 ? 'text-gray-900' : 'text-gray-400'}`}>Speed Challenge</span>
+                                        <span className={`font-semibold text-sm ${stats.learnedWords >= 60 ? 'text-gray-900' : 'text-gray-400'}`}>Speed Challenge</span>
                                         {stats.learnedWords >= 60 ? (
-                                            <span className="text-sm text-gray-500">High Score: {stats.speedChallengeHighScore ?? 0}</span>
+                                            <span className="text-xs text-gray-500">High Score: {stats.speedChallengeHighScore ?? 0}</span>
                                         ) : (
-                                            <span className="text-sm text-gray-400">Need {60 - stats.learnedWords} more words</span>
+                                            <span className="text-xs text-gray-400">Need {60 - stats.learnedWords} more</span>
                                         )}
                                     </div>
                                 </button>
@@ -939,18 +949,18 @@ const Dashboard = () => {
                                 <button
                                     onClick={() => navigate('/mistake-test')}
                                     disabled={mistakeCount < 10}
-                                    className={`w-full p-6 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 flex flex-row items-center text-left gap-4 ${mistakeCount >= 10
+                                    className={`w-full p-4 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 flex flex-col items-center text-center gap-2 ${mistakeCount >= 10
                                         ? 'bg-white hover:shadow-md'
                                         : 'bg-gray-50 opacity-60 cursor-not-allowed'
                                         }`}
                                 >
-                                    <AlertCircle className={`w-8 h-8 flex-shrink-0 ${mistakeCount >= 10 ? 'text-gray-400' : 'text-gray-300'}`} />
+                                    <AlertCircle className={`w-10 h-10 ${mistakeCount >= 10 ? 'text-gray-400' : 'text-gray-300'}`} />
                                     <div className="flex flex-col">
-                                        <span className={`font-semibold ${mistakeCount >= 10 ? 'text-gray-900' : 'text-gray-400'}`}>Mistake Test</span>
+                                        <span className={`font-semibold text-sm ${mistakeCount >= 10 ? 'text-gray-900' : 'text-gray-400'}`}>Mistake Test</span>
                                         {mistakeCount >= 10 ? (
-                                            <span className="text-sm text-gray-500">{mistakeCount} Mistakes</span>
+                                            <span className="text-xs text-gray-500">{mistakeCount} Mistakes</span>
                                         ) : (
-                                            <span className="text-sm text-gray-400">Need {10 - mistakeCount} more mistakes</span>
+                                            <span className="text-xs text-gray-400">Need {10 - mistakeCount} more</span>
                                         )}
                                     </div>
                                 </button>
@@ -982,19 +992,22 @@ const Dashboard = () => {
                                         streakDetails.last30Days.map((day, index) => {
                                             const today = new Date().toISOString().split('T')[0];
                                             const isToday = day.date === today;
-                                            const intensity = day.hasActivity
-                                                ? (isToday ? 'bg-gray-900' : 'bg-gray-400')
+                                            const count = day.activityCount ?? (day.hasActivity ? 1 : 0);
+                                            const intensity = isToday && count > 0
+                                                ? 'bg-gray-900'
+                                                : count >= 4 ? 'bg-gray-600'
+                                                : count >= 2 ? 'bg-gray-400'
+                                                : count >= 1 ? 'bg-gray-300'
                                                 : 'bg-gray-100';
                                             return (
                                                 <div
                                                     key={index}
-                                                    className={`aspect-square rounded-md ${intensity}`}
-                                                    title={day.date}
+                                                    className={`aspect-square rounded-md ${intensity} transition-colors`}
+                                                    title={`${day.date}${count > 0 ? ` · ${count} activit${count === 1 ? 'y' : 'ies'}` : ''}`}
                                                 />
                                             );
                                         })
                                     ) : (
-                                        // Fallback: show 30 empty squares if no data
                                         Array.from({ length: 30 }).map((_, index) => (
                                             <div
                                                 key={index}
@@ -1029,6 +1042,17 @@ const Dashboard = () => {
                                     );
                                 })}
                             </div>
+                        </div>
+                        {/* 5. Vocabulary Browser */}
+                        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Learned Words</h3>
+                            <p className="text-sm text-gray-500 mb-4">Browse, search and replay all {allWords.length > 0 ? allWords.filter((w: any) => w.isLearned).length : 0} words you've learned</p>
+                            <button
+                                onClick={() => navigate('/vocab')}
+                                className="w-full py-2.5 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition"
+                            >
+                                Open Vocabulary
+                            </button>
                         </div>
                     </div>
                 </div>

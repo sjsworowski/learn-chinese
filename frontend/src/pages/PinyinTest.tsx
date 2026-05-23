@@ -5,6 +5,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Clock, Check, X, Lightbulb } from 'lucide-react';
 import Confetti from '../components/Confetti';
+import { playCorrectSound } from '../components/playCorrectSound';
+import TestProgressBar from '../components/TestProgressBar';
 
 interface VocabWord {
     id: string;
@@ -47,7 +49,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const PinyinTest = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     // Helper to get navigation state with challenge info preserved
     const getNavState = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -85,7 +87,7 @@ const PinyinTest = () => {
     const [firstAnswerRaw, setFirstAnswerRaw] = useState<string | null>(null);
 
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        let timer: ReturnType<typeof setTimeout>;
         if (!completed && !loading) {
             timer = setInterval(() => {
                 setTestDuration(Math.floor((Date.now() - testStartTime) / 1000));
@@ -182,6 +184,7 @@ const PinyinTest = () => {
         if (correct) {
             setFeedback('correct');
             setFeedbackOpacity(1);
+            playCorrectSound();
             setTimeout(async () => {
                 setFeedback(null);
                 setAnswer('');
@@ -367,12 +370,7 @@ const PinyinTest = () => {
                         </div>
                     )}
                     <div className="mt-6">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
-                                style={{ width: `${((currentIdx + 1) / words.length) * 100}%` }}
-                            ></div>
-                        </div>
+                        <TestProgressBar current={currentIdx} total={words.length} />
                     </div>
                 </div>
             </div>

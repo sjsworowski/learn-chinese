@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import VerifyEmail from './pages/VerifyEmail'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Study from './pages/Study'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -14,6 +15,7 @@ import Profile from './pages/Profile'
 import SpeedChallenge from './pages/SpeedChallenge';
 import ListenTest from './pages/ListenTest';
 import MistakeTest from './pages/MistakeTest';
+import VocabBrowser from './pages/VocabBrowser';
 
 function App() {
     return (
@@ -25,6 +27,8 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/verify-email" element={<VerifyEmail />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/vocab" element={<VocabBrowser />} />
                         <Route path="/speed-challenge" element={
                             <ProtectedRoute>
                                 <SpeedChallenge />
@@ -71,7 +75,7 @@ function App() {
 
                 {/* Footer */}
                 <footer className="w-full p-4 text-center text-m text-gray-500">
-                    Version 1.0.11
+                    Version 1.0.12
                 </footer>
             </div>
         </AuthProvider>

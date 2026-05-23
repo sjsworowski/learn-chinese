@@ -1,7 +1,13 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Post, Put, Body, Get, UseGuards, Request, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LocalAuthGuard } from './local-auth.guard';
+
+interface AuthenticatedRequest {
+    user: {
+        id: string;
+    };
+}
 
 @Controller('auth')
 export class AuthController {
@@ -9,8 +15,17 @@ export class AuthController {
 
     @Get('me')
     @UseGuards(JwtAuthGuard)
-    async getProfile(@Request() req) {
+    async getProfile(@Request() req: AuthenticatedRequest) {
         return this.authService.findById(req.user.id);
+    }
+
+    @Put('profile')
+    @UseGuards(JwtAuthGuard)
+    async updateProfile(
+        @Request() req: AuthenticatedRequest,
+        @Body() body: { email?: string; username?: string },
+    ) {
+        return this.authService.updateProfile(req.user.id, body.email, body.username);
     }
 
     @Post('register')
@@ -30,6 +45,16 @@ export class AuthController {
         return this.authService.resendVerificationEmail(body.email);
     }
 
+    @Post('forgot-password')
+    async forgotPassword(@Body() body: { email: string }) {
+        return this.authService.forgotPassword(body.email);
+    }
+
+    @Post('reset-password')
+    async resetPassword(@Body() body: { token: string; newPassword: string }) {
+        return this.authService.resetPassword(body.token, body.newPassword);
+    }
+
     @Get('verification-status')
     async verificationStatus(@Query('email') email?: string) {
         if (!email || typeof email !== 'string') {
@@ -40,7 +65,7 @@ export class AuthController {
 
     @Post('login')
     @UseGuards(LocalAuthGuard)
-    async login(@Request() req, @Body() body: { rememberMe?: boolean }) {
+    async login(@Request() req: AuthenticatedRequest, @Body() body: { rememberMe?: boolean }) {
         return this.authService.login(req.user, body.rememberMe ?? true);
     }
 }

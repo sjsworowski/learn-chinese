@@ -50,4 +50,20 @@ export class EmailService {
         `;
         await this.sendEmail(email, subject, html);
     }
+
+    async sendPasswordResetEmail(email: string, resetUrl: string): Promise<void> {
+        const subject = 'Reset your password – Learn Chinese';
+        const html = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #111;">Reset your password</h2>
+                <p>We received a request to reset your password. Click the button below to set a new password.</p>
+                <a href="${resetUrl}"
+                   style="display: inline-block; background-color: #111; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+                    Reset password
+                </a>
+                <p style="color: #666; font-size: 14px;">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+            </div>
+        `;
+        await this.sendEmail(email, subject, html);
+    }
 } 

@@ -4,6 +4,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Volume2, Check, X, Lightbulb, Lock } from 'lucide-react';
 import Confetti from '../components/Confetti';
+import { playCorrectSound } from '../components/playCorrectSound';
+import TestProgressBar from '../components/TestProgressBar';
 
 interface VocabWord {
     id: string;
@@ -65,7 +67,6 @@ const createHint = (text: string) => {
 
 const MistakeTest = () => {
     const navigate = useNavigate();
-    
     // Helper to get navigation state with challenge info preserved
     const getNavState = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -244,6 +245,7 @@ const MistakeTest = () => {
             setCorrectAnswers(prev => prev + 1);
             setFeedback('correct');
             setFeedbackOpacity(1);
+            playCorrectSound();
             setIncorrectAttempts(0);
             setShowHint(false);
             setHintText('');
@@ -382,7 +384,17 @@ const MistakeTest = () => {
     useEffect(() => {
         if (questions.length > 0 && currentQuestion < questions.length) {
             const currentQ = questions[currentQuestion];
+            // Auto-focus input
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 200);
             if (currentQ && currentQ.type === 'listen-test') {
+                // Play audio after a short delay to ensure the question is loaded
+                setTimeout(() => {
+                    playAudio();
+                }, 50);
+            }
+            if (currentQ && currentQ.type === 'english') {
                 // Play audio after a short delay to ensure the question is loaded
                 setTimeout(() => {
                     playAudio();
@@ -586,12 +598,7 @@ const MistakeTest = () => {
                     )}
 
                     <div className="mt-6">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
-                                style={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
-                            ></div>
-                        </div>
+                        <TestProgressBar current={currentQuestion} total={totalQuestions} />
                     </div>
                 </div>
             </div>

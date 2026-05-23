@@ -5,6 +5,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Clock, Volume2, Check, X, Lightbulb } from 'lucide-react';
 import Confetti from '../components/Confetti';
+import { playCorrectSound } from '../components/playCorrectSound';
+import TestProgressBar from '../components/TestProgressBar';
 
 interface VocabWord {
     id: string;
@@ -54,7 +56,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const Test = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     // Helper to get navigation state with challenge info preserved
     const getNavState = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -82,6 +84,7 @@ const Test = () => {
     const [testDuration, setTestDuration] = useState(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const [showConfetti, setShowConfetti] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     // Add hint-related state
     const [incorrectAttempts, setIncorrectAttempts] = useState(0);
@@ -92,7 +95,7 @@ const Test = () => {
     const [firstAnswerRaw, setFirstAnswerRaw] = useState<string | null>(null);
 
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        let timer: ReturnType<typeof setInterval>;
         if (!completed && !loading) {
             timer = setInterval(() => {
                 setTestDuration(Math.floor((Date.now() - testStartTime) / 1000));
@@ -172,6 +175,14 @@ const Test = () => {
                 const selected = pickRandom(learned, 10);
                 setWords(selected);
                 setLoading(false);
+                // Auto-focus input
+                setTimeout(() => {
+                    inputRef.current?.focus();
+                }, 100);
+                // Play the first word's audio once the test is ready.
+                setTimeout(() => {
+                    playAudio(selected[0]);
+                }, 500);
             } catch (error) {
                 toast.error('Failed to load test data.');
                 navigate('/', { state: getNavState() });
@@ -192,6 +203,7 @@ const Test = () => {
         if (correct) {
             setFeedback('correct');
             setFeedbackOpacity(1);
+            playCorrectSound();
             setTimeout(async () => {
                 setFeedback(null);
                 setAnswer('');
@@ -205,7 +217,11 @@ const Test = () => {
                     setCompleted(true);
                     setShowConfetti(true);
                 } else {
-                    setCurrentIdx(idx => idx + 1);
+                    const nextIndex = currentIdx + 1;
+                    setCurrentIdx(nextIndex);
+                    setTimeout(() => {
+                        playAudio(words[nextIndex]);
+                    }, 300);
                 }
             }, 800);
         } else {
@@ -270,33 +286,46 @@ const Test = () => {
             setCompleted(true);
             return;
         }
-        setCurrentIdx(idx => idx + 1);
+        const nextIndex = currentIdx + 1;
+        setCurrentIdx(nextIndex);
         setAnswer('');
         setRevealAnswer(false);
         setPostHintIncorrectAttempts(0);
         setFirstAnswerRaw(null);
         setShowHint(false);
         setHintText('');
+
+        setTimeout(() => {
+            playAudio(words[nextIndex]);
+        }, 300);
     };
 
-    const playAudio = async () => {
-        if (!word) return;
+    const playAudio = async (playWord?: VocabWord) => {
+        const currentWord = playWord || word;
+        if (!currentWord) return;
+
         try {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-            const response = await fetch(`${API_BASE}/tts`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ text: word.chinese }),
+            const response = await axios.post(`${API_BASE}/tts`, {
+                text: currentWord.chinese,
+                language: 'zh-CN'
+            }, {
+                responseType: 'blob',
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined
             });
-            if (!response.ok) throw new Error('Failed to fetch audio');
-            const audioBlob = await response.blob();
+
+            const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
             const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new window.Audio(audioUrl);
-            audio.play();
+
+            if (audioRef.current) {
+                audioRef.current.src = audioUrl;
+                audioRef.current.play().catch(error => {
+                    console.error('Failed to play audio:', error);
+                    toast.error('Failed to play audio. Please try again.');
+                });
+            }
         } catch (error) {
+            console.error('Failed to generate audio:', error);
             toast.error('Failed to play audio. Please try again.');
         }
     };
@@ -340,7 +369,7 @@ const Test = () => {
                         <div className="flex items-center gap-4 mb-2">
                             <span className="text-4xl">{word.chinese}</span>
                             <button
-                                onClick={playAudio}
+                                onClick={() => playAudio()}
                                 className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                                 title="Listen to pronunciation"
                             >
@@ -415,15 +444,12 @@ const Test = () => {
                         </div>
                     )}
                     <div className="mt-6">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
-                                style={{ width: `${((currentIdx + 1) / words.length) * 100}%` }}
-                            ></div>
-                        </div>
+                        <TestProgressBar current={currentIdx} total={words.length} />
                     </div>
                 </div>
             </div>
+
+            <audio ref={audioRef} style={{ display: 'none' }} />
 
             {/* Centered Feedback Overlay */}
             {feedback && (

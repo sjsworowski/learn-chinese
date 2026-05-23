@@ -15,6 +15,7 @@ interface AuthContextType {
     register: (email: string, password: string, username?: string) => Promise<{ needsVerification: boolean; email?: string }>
     verifyEmail: (token: string) => Promise<void>
     resendVerificationEmail: (email: string) => Promise<void>
+    updateProfile: (email: string, username: string) => Promise<User>
     logout: () => void
     isLoading: boolean
 }
@@ -130,6 +131,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         toast.success('Email verified. You\'re signed in!');
     }
 
+    const updateProfile = async (email: string, username: string) => {
+        const API_BASE = import.meta.env.VITE_API_URL;
+        const response = await axios.put(`${API_BASE}/auth/profile`, { email, username });
+        const { user: userData, message } = response.data;
+        setUser(userData);
+        if (message) {
+            toast.success(message);
+        }
+        return userData;
+    }
+
     const logout = () => {
         localStorage.removeItem('token')
         sessionStorage.removeItem('token')
@@ -144,6 +156,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         register,
         verifyEmail,
         resendVerificationEmail,
+        updateProfile,
         logout,
         isLoading
     }

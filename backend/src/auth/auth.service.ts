@@ -10,6 +10,7 @@ import { EmailService } from '../email/email.service';
 export class AuthService {
     private readonly SALT_ROUNDS = 10;
     private readonly VERIFY_EXPIRY = '24h';
+    private readonly RESET_EXPIRY = '1h';
 
     constructor(
         @InjectRepository(User)
@@ -89,6 +90,100 @@ export class AuthService {
         }
         await this.sendVerificationEmailOrThrow(user);
         return { message: 'Verification email sent. Check your inbox.' };
+    }
+
+    private async sendPasswordResetEmailForUser(user: User): Promise<void> {
+        const token = this.jwtService.sign(
+            { sub: user.id, email: user.email, type: 'password-reset' },
+            { expiresIn: this.RESET_EXPIRY }
+        );
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+        await this.emailService.sendPasswordResetEmail(user.email, resetUrl);
+    }
+
+    async forgotPassword(email: string): Promise<{ message: string }> {
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (!user) {
+            // For security, don't reveal whether the email exists
+            return { message: 'If an account exists for this email, a password reset link has been sent.' };
+        }
+        await this.sendPasswordResetEmailForUser(user);
+        return { message: 'If an account exists for this email, a password reset link has been sent.' };
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+        try {
+            const payload: any = this.jwtService.verify(token);
+            if (payload.type !== 'password-reset') {
+                throw new UnauthorizedException('Invalid password reset link.');
+            }
+            const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+            if (!user) throw new UnauthorizedException('Invalid password reset link.');
+            const hashed = await bcrypt.hash(newPassword, this.SALT_ROUNDS);
+            user.password = hashed;
+            await this.userRepository.save(user);
+            return { message: 'Password reset successfully. You can now sign in.' };
+        } catch (err) {
+            throw new UnauthorizedException('Password reset link expired or invalid.');
+        }
+    }
+
+    async updateProfile(id: string, email?: string, username?: string): Promise<{ user: any; message: string }> {
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new BadRequestException('User not found.');
+        }
+
+        const originalEmail = user.email;
+        let emailChanged = false;
+        let changed = false;
+
+        if (username !== undefined) {
+            const cleanedUsername = username.trim();
+            if (!cleanedUsername) {
+                throw new BadRequestException('Username cannot be empty.');
+            }
+            if (cleanedUsername !== user.username) {
+                user.username = cleanedUsername;
+                changed = true;
+            }
+        }
+
+        if (email !== undefined) {
+            const cleanedEmail = email.trim().toLowerCase();
+            if (!cleanedEmail) {
+                throw new BadRequestException('Email cannot be empty.');
+            }
+            if (cleanedEmail !== user.email) {
+                const existing = await this.userRepository.findOne({ where: { email: cleanedEmail } });
+                if (existing && existing.id !== user.id) {
+                    throw new ConflictException('An account with this email already exists.');
+                }
+                user.email = cleanedEmail;
+                user.emailVerified = false;
+                emailChanged = true;
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            const { password, ...result } = user;
+            return { user: result, message: 'No profile changes were detected.' };
+        }
+
+        await this.userRepository.save(user);
+        if (emailChanged) {
+            await this.sendVerificationEmailOrThrow(user);
+        }
+
+        const { password, ...result } = user;
+        return {
+            user: result,
+            message: emailChanged
+                ? 'Profile updated. Please verify your new email address.'
+                : 'Profile updated successfully.',
+        };
     }
 
     async verifyEmail(token: string): Promise<{ access_token: string; user: any }> {

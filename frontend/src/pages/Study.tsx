@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Volume2, Check, Trophy, CheckCircle, Clock } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import TestProgressBar from '../components/TestProgressBar';
 
 interface VocabularyWord {
     id: string
@@ -32,9 +33,11 @@ const Study = () => {
         sessionTime: 0,
         completed: false
     })
+    const [totalLearnedWords, setTotalLearnedWords] = useState(0)
 
     useEffect(() => {
         fetchWords()
+        fetchTotalLearnedWords()
     }, [])
 
     useEffect(() => {
@@ -109,6 +112,8 @@ const Study = () => {
 
     const markWordAsLearned = async (wordId: string) => {
         try {
+            const currentWordState = words.find(word => word.id === wordId)
+            const wasAlreadyLearned = currentWordState?.isLearned
             await axios.post(`${API_BASE}/vocabulary/${wordId}/learn`);
             setWords(prev => prev.map(word =>
                 word.id === wordId ? { ...word, isLearned: true } : word
@@ -117,6 +122,9 @@ const Study = () => {
                 word.id === wordId ? { ...word, isLearned: true } : word
             ));
             setStudySession(prev => ({ ...prev, wordsLearned: prev.wordsLearned + 1 }));
+            if (!wasAlreadyLearned) {
+                setTotalLearnedWords(prev => prev + 1)
+            }
         } catch (error: any) {
             toast.error('Failed to mark word as learned. Please try again later.')
         }
@@ -184,12 +192,12 @@ const Study = () => {
             type: 'study',
             duration: studySession.sessionTime
         };
-        
+
         console.log('🔥 LOG STUDY TIME CALLED');
         console.log('Endpoint:', endpoint);
         console.log('Payload:', payload);
         console.log('API_BASE:', API_BASE);
-        
+
         try {
             console.log('📤 Sending POST request to:', endpoint);
             const response = await axios.post(endpoint, payload);
@@ -214,7 +222,7 @@ const Study = () => {
             console.error('Error config URL:', error.config?.url);
             console.error('Error config method:', error.config?.method);
             console.error('Error config headers:', error.config?.headers);
-            
+
             const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
             console.error('Error message to show:', errorMsg);
             toast.error(`Failed to log study activity: ${errorMsg}`);
@@ -225,7 +233,7 @@ const Study = () => {
     const handleReturnToDashboard = async () => {
         // Log activity FIRST, even if session progress fails
         await logStudyTime();
-        
+
         // Save completed session progress to backend only
         const nextSession = currentSession + 1;
         try {
@@ -266,10 +274,19 @@ const Study = () => {
         setSessionWords(firstSessionWords)
     }
 
+    const fetchTotalLearnedWords = async () => {
+        try {
+            const statsResponse = await axios.get(`${API_BASE}/stats`)
+            setTotalLearnedWords(statsResponse.data.learnedWords || 0)
+        } catch (error) {
+            console.error('Failed to fetch total learned words:', error)
+        }
+    }
+
     const handleIntermediateSessionComplete = async () => {
         // Log activity FIRST, even if session progress fails
         await logStudyTime();
-        
+
         // Save current session progress before completing
         try {
             await axios.put(`${API_BASE}/session-progress`, {
@@ -400,7 +417,12 @@ const Study = () => {
         if (isLoading || sessionComplete || sessionFinished || sessionWords.length === 0) return;
         const word = sessionWords[currentIndex];
         if (!word?.chinese) return;
-        playAudioForText(word.chinese);
+        
+        const delay = setTimeout(() => {
+            playAudioForText(word.chinese);
+        }, 300);
+
+        return () => clearTimeout(delay);
     }, [currentIndex, sessionWords])
 
     // Helper to format seconds as mm:ss
@@ -437,32 +459,6 @@ const Study = () => {
     }
 
     if (sessionFinished) {
-        const nextSession = currentSession + 1;
-        const cycleStep = nextSession % 14; // Use 14-step cycle
-
-        // Check if we just completed study sessions that should lead to tests
-        const isAfterStudySessions = cycleStep === 2 || cycleStep === 3 || cycleStep === 4 ||
-            cycleStep === 7 || cycleStep === 8 || cycleStep === 11 ||
-            cycleStep === 12 || cycleStep === 13;
-
-        // Determine the next step in the learning cycle
-        let nextStepText = '';
-        let nextStepAction = () => { };
-
-        if (isAfterStudySessions) {
-            // After study sessions, show return to dashboard
-            nextStepText = 'Return to Dashboard';
-            nextStepAction = handleReturnToDashboard;
-        } else if (cycleStep === 0 || cycleStep === 1 || cycleStep === 5 || cycleStep === 6 ||
-            cycleStep === 9 || cycleStep === 10) {
-            // Next step is a study session
-            nextStepText = `Continue to Session ${nextSession + 1}`;
-            nextStepAction = handleContinueSession;
-        } else {
-            // Default to return to dashboard
-            nextStepText = 'Return to Dashboard';
-            nextStepAction = handleReturnToDashboard;
-        }
 
         return (
             <div className="min-h-screen flex-1 flex flex-col items-center justify-center">
@@ -473,7 +469,7 @@ const Study = () => {
                                 <CheckCircle className="w-8 h-8 text-gray-700" />
                             </div>
                             <h2 className="text-3xl font-bold text-gray-900 mb-2">Session {currentSession + 1} Complete!</h2>
-                            <p className="text-gray-600">Great job! You've completed session {currentSession + 1}.</p>
+                            <p className="text-gray-600">Great job! You now know {totalLearnedWords} words.</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-8">
@@ -485,19 +481,11 @@ const Study = () => {
 
                         <div className="space-y-3">
                             <button
-                                onClick={nextStepAction}
-                                className="btn-primary w-full"
+                                onClick={handleReturnToDashboard}
+                                className="btn-secondary w-full"
                             >
-                                {nextStepText}
+                                Return to Dashboard
                             </button>
-                            {!isAfterStudySessions && (
-                                <button
-                                    onClick={handleReturnToDashboard}
-                                    className="btn-secondary w-full"
-                                >
-                                    Return to Dashboard
-                                </button>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -546,12 +534,7 @@ const Study = () => {
 
                     {/* Progress Bar */}
                     <div className="mt-6">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
-                                style={{ width: `${((currentIndex + 1) / sessionWords.length) * 100}%` }}
-                            ></div>
-                        </div>
+                        <TestProgressBar current={currentIndex} total={sessionWords.length} />
                     </div>
                 </div>
             </div>

@@ -4,6 +4,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Volume2, RotateCcw, Check, X, Lightbulb } from 'lucide-react';
 import Confetti from '../components/Confetti';
+import { playCorrectSound } from '../components/playCorrectSound';
+import TestProgressBar from '../components/TestProgressBar';
 
 interface VocabWord {
     id: string;
@@ -58,7 +60,7 @@ const normalizePinyin = (pinyin: string) => {
 
 const ListenTest = () => {
     const navigate = useNavigate();
-    
+
     // Helper to get navigation state with challenge info preserved
     const getNavState = () => {
         const today = new Date().toISOString().split('T')[0];
@@ -104,7 +106,7 @@ const ListenTest = () => {
 
     // Track test duration
     useEffect(() => {
-        let timer: NodeJS.Timeout;
+        let timer: ReturnType<typeof setTimeout>;
         if (!isFinished && !loading) {
             timer = setInterval(() => {
                 setTestDuration(Math.floor((Date.now() - testStartTime) / 1000));
@@ -273,6 +275,7 @@ const ListenTest = () => {
             setCorrectAnswers(prev => prev + 1);
             setFeedback('correct');
             setFeedbackOpacity(1);
+            playCorrectSound();
             setIncorrectAttempts(0);
             setShowHint(false);
             setHintText('');
@@ -537,12 +540,7 @@ const ListenTest = () => {
                         </div>
                     )}
                     <div className="mt-6">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                                className="bg-gray-900 h-2 rounded-full transition-all duration-300 ease-out"
-                                style={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
-                            ></div>
-                        </div>
+                        <TestProgressBar current={currentQuestion} total={totalQuestions} />
                     </div>
                 </div>
             </div>

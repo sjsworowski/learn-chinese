@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { playFanfare } from './playFanfare';
 
 interface ConfettiPiece {
     id: number;
@@ -16,6 +17,7 @@ const Confetti: React.FC = () => {
     const [isFading, setIsFading] = useState(false);
 
     useEffect(() => {
+        playFanfare();
         // Create confetti pieces
         const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
         const pieces: ConfettiPiece[] = [];

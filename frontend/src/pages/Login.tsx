@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { BookOpen, Mail, Lock } from 'lucide-react'
+import { BookOpen, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
+import axios from 'axios'
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const Login = () => {
     const [searchParams, setSearchParams] = useSearchParams()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [rememberMe, setRememberMe] = useState(true)
     const [isLoading, setIsLoading] = useState(false)
     const [unverifiedMessage, setUnverifiedMessage] = useState<string | null>(null)
@@ -55,6 +59,26 @@ const Login = () => {
             toast.error(err.response?.data?.message || 'Failed to resend email')
         } finally {
             setResendLoading(false)
+        }
+    }
+
+    // Forgot password state & handler
+    const [forgotOpen, setForgotOpen] = useState(false)
+    const [forgotEmail, setForgotEmail] = useState('')
+    const [forgotLoading, setForgotLoading] = useState(false)
+    const [forgotSentMsg, setForgotSentMsg] = useState<string | null>(null)
+
+    const handleForgotSubmit = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault()
+        if (!forgotEmail) return toast.error('Enter your email')
+        setForgotLoading(true)
+        try {
+            const res = await axios.post(`${API_BASE}/auth/forgot-password`, { email: forgotEmail })
+            setForgotSentMsg(res.data?.message || 'If an account exists, a reset link was sent.')
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to send reset email')
+        } finally {
+            setForgotLoading(false)
         }
     }
 
@@ -115,14 +139,26 @@ const Login = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     autoComplete="current-password"
                                     required
-                                    className="appearance-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                    className="appearance-none relative block w-full pl-10 pr-10 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+                                <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-colors duration-150 hover:text-gray-700"
+                                    onMouseDown={() => setShowPassword(true)}
+                                    onMouseUp={() => setShowPassword(false)}
+                                    onMouseLeave={() => setShowPassword(false)}
+                                    onTouchStart={() => setShowPassword(true)}
+                                    onTouchEnd={() => setShowPassword(false)}
+                                    aria-label="Show password while holding"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5 transition-transform duration-150" /> : <Eye className="h-5 w-5 transition-transform duration-150" />}
+                                </button>
                             </div>
                         </div>
                         <div className="flex items-center justify-between">
@@ -149,15 +185,55 @@ const Login = () => {
                                 )}
                             </button>
                         </div>
-                        <p className="text-center text-sm text-gray-600">
-                            Don&apos;t have an account?{' '}
-                            <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-                                Sign up
-                            </Link>
-                        </p>
+                        <div className="flex flex-col gap-3">
+                            <p className="text-center text-sm text-gray-600">
+                                Don&apos;t have an account?{' '}
+                                <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
+                                    Sign up
+                                </Link>
+                            </p>
+                            <p className="text-center text-sm text-gray-600">
+                                <button type="button" onClick={() => { setForgotOpen(true); setForgotEmail(email || '') }} className="text-primary-600 hover:underline">
+                                    Forgot password?
+                                </button>
+                            </p>
+                        </div>
                     </form>
                 </div>
             </div>
+            {/* Forgot password modal */}
+            {forgotOpen && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-medium mb-3">Reset your password</h3>
+                        {forgotSentMsg ? (
+                            <div className="mb-4 text-sm text-gray-700">{forgotSentMsg}</div>
+                        ) : (
+                            <form onSubmit={handleForgotSubmit} className="space-y-3">
+                                <div>
+                                    <label className="sr-only">Email</label>
+                                    <input
+                                        type="email"
+                                        className="w-full border rounded px-3 py-2"
+                                        placeholder="Enter your email"
+                                        value={forgotEmail}
+                                        onChange={(e) => setForgotEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <button type="submit" className="btn-primary flex-1" disabled={forgotLoading}>
+                                        {forgotLoading ? 'Sending…' : 'Send reset email'}
+                                    </button>
+                                    <button type="button" className="px-4 py-2 bg-gray-100 rounded" onClick={() => { setForgotOpen(false); setForgotSentMsg(null) }}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

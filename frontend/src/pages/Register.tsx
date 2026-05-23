@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { BookOpen, Mail, Lock, User } from 'lucide-react'
+import { BookOpen, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const POLL_INTERVAL_MS = 2000
@@ -9,6 +9,7 @@ const POLL_INTERVAL_MS = 2000
 const Register = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [username, setUsername] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [emailSent, setEmailSent] = useState(false)
@@ -40,8 +41,8 @@ const Register = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (password.length < 6) {
-            toast.error('Password must be at least 6 characters')
+        if (password.length < 8) {
+            toast.error('Password must be at least 8 characters')
             return
         }
         setIsLoading(true)
@@ -160,15 +161,27 @@ const Register = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     required
-                                    minLength={6}
-                                    className="appearance-none relative block w-full pl-10 pr-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                    placeholder="Password (min 6 characters)"
+                                    minLength={8}
+                                    className="appearance-none relative block w-full pl-10 pr-10 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                    placeholder="Password (min 8 characters)"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
+                                <button
+                                    type="button"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-colors duration-150 hover:text-gray-700"
+                                    onMouseDown={() => setShowPassword(true)}
+                                    onMouseUp={() => setShowPassword(false)}
+                                    onMouseLeave={() => setShowPassword(false)}
+                                    onTouchStart={() => setShowPassword(true)}
+                                    onTouchEnd={() => setShowPassword(false)}
+                                    aria-label="Show password while holding"
+                                >
+                                    {showPassword ? <EyeOff className="h-5 w-5 transition-transform duration-150" /> : <Eye className="h-5 w-5 transition-transform duration-150" />}
+                                </button>
                             </div>
                         </div>
                         <div>
