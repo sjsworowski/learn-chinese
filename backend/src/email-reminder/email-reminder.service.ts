@@ -5,6 +5,7 @@ import { EmailReminder } from '../entities/email-reminder.entity';
 import { User } from '../entities/user.entity';
 import { StatsService } from '../stats/stats.service';
 import { EmailService } from '../email/email.service';
+import { PartnerService } from '../partner/partner.service';
 
 @Injectable()
 export class EmailReminderService {
@@ -14,7 +15,8 @@ export class EmailReminderService {
         @InjectRepository(User)
         private userRepository: Repository<User>,
         private statsService: StatsService,
-        private emailService: EmailService
+        private emailService: EmailService,
+        private partnerService: PartnerService
     ) { }
 
     async checkAndSendReminders(): Promise<{
@@ -46,6 +48,15 @@ export class EmailReminderService {
             else if (result === 'skipped_already_sent') summary.skippedAlreadySentToday++;
             else if (result === 'skipped_streak_increased') summary.skippedStreakIncreased++;
             else if (result === 'error') summary.errors++;
+        }
+
+        // Partner reminders run independently — checks all users with a partner email
+        // regardless of whether their own reminders are enabled
+        try {
+            await this.partnerService.checkAndSendAllPartnerReminders();
+        } catch (err) {
+            console.error('Error processing partner reminders:', err);
+            summary.errors++;
         }
 
         console.log('Daily reminders summary:', summary);
@@ -112,51 +123,27 @@ export class EmailReminderService {
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
         if (streak === 0) {
-            // Email for users with 0 streak - encouraging them to start fresh
             return `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center;">
                         <h1 style="margin: 0; font-size: 28px;">🌟 Time to Start Fresh!</h1>
                         <p style="margin: 10px 0 0 0; font-size: 18px;">Your Chinese learning journey awaits</p>
                     </div>
-                    
                     <div style="padding: 30px; background: #f8f9fa; border-radius: 0 0 10px 10px;">
                         <h2 style="color: #333; margin-top: 0;">Hi there!</h2>
                         <p style="color: #555; font-size: 16px; line-height: 1.6;">
                             It's been a while since your last study session. Don't worry - every great learning journey starts with a single step!
                         </p>
-                        
                         <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                            Take just <strong>5 minutes</strong> today to get back into your Chinese learning routine. 
-                            You'll be amazed at how quickly you can pick up where you left off!
+                            Take just <strong>5 minutes</strong> today to get back into your Chinese learning routine.
                         </p>
-                        
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${frontendUrl}" 
-                               style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); 
-                                      color: white; 
-                                      padding: 15px 30px; 
-                                      text-decoration: none; 
-                                      border-radius: 25px; 
-                                      font-size: 16px; 
-                                      font-weight: bold;
-                                      display: inline-block;
-                                      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);">
+                            <a href="${frontendUrl}"
+                               style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-size: 16px; font-weight: bold; display: inline-block;">
                                 🚀 Start Learning
                             </a>
                         </div>
-                        
-                        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #2e7d32; margin-top: 0;">💡 Perfect for Getting Started:</h3>
-                            <ul style="color: #555; margin: 0; padding-left: 20px;">
-                                <li>Review your vocabulary progress</li>
-                                <li>Take a gentle test to warm up</li>
-                                <li>Listen to pronunciation</li>
-                                <li>Set a new learning goal</li>
-                            </ul>
-                        </div>
                     </div>
-                    
                     <div style="text-align: center; margin-top: 20px; padding: 20px; border-top: 1px solid #eee;">
                         <p style="color: #666; font-size: 12px; margin: 0;">
                             <a href="${frontendUrl}/profile" style="color: #667eea;">Manage email preferences</a>
@@ -165,52 +152,28 @@ export class EmailReminderService {
                 </div>
             `;
         } else {
-            // Email for users with existing streak - encouraging them to maintain it
             return `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center;">
                         <h1 style="margin: 0; font-size: 28px;">🔥 ${streak}-Day Streak!</h1>
                         <p style="margin: 10px 0 0 0; font-size: 18px;">Don't let it slip away!</p>
                     </div>
-                    
                     <div style="padding: 30px; background: #f8f9fa; border-radius: 0 0 10px 10px;">
                         <h2 style="color: #333; margin-top: 0;">Hi there!</h2>
                         <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                            You're on an amazing <strong>${streak}-day learning streak</strong>! 
+                            You're on an amazing <strong>${streak}-day learning streak</strong>!
                             That's incredible progress in your Chinese learning journey.
                         </p>
-                        
                         <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                            Take just <strong>5 minutes</strong> to study today and keep your momentum going. 
-                            Every day counts towards your language goals!
+                            Take just <strong>5 minutes</strong> to study today and keep your momentum going.
                         </p>
-                        
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${frontendUrl}" 
-                               style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); 
-                                      color: white; 
-                                      padding: 15px 30px; 
-                                      text-decoration: none; 
-                                      border-radius: 25px; 
-                                      font-size: 16px; 
-                                      font-weight: bold;
-                                      display: inline-block;
-                                      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);">
+                            <a href="${frontendUrl}"
+                               style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-size: 16px; font-weight: bold; display: inline-block;">
                                 🚀 Study Now
                             </a>
                         </div>
-                        
-                        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                            <h3 style="color: #2e7d32; margin-top: 0;">💡 Quick Study Tips:</h3>
-                            <ul style="color: #555; margin: 0; padding-left: 20px;">
-                                <li>Review 10 vocabulary words</li>
-                                <li>Take a quick test</li>
-                                <li>Practice pronunciation</li>
-                                <li>Listen to Chinese audio</li>
-                            </ul>
-                        </div>
                     </div>
-                    
                     <div style="text-align: center; margin-top: 20px; padding: 20px; border-top: 1px solid #eee;">
                         <p style="color: #666; font-size: 12px; margin: 0;">
                             <a href="${frontendUrl}/profile" style="color: #667eea;">Manage email preferences</a>
@@ -238,7 +201,6 @@ export class EmailReminderService {
         const reminder = await this.emailReminderRepository.findOne({
             where: { userId }
         });
-
         return {
             enabled: reminder?.enabled ?? true,
             lastReminderSent: reminder?.lastReminderSent,
@@ -262,30 +224,17 @@ export class EmailReminderService {
         }
 
         await this.emailReminderRepository.save(reminder);
-
-        // Also update user table
-        await this.userRepository.update(userId, {
-            emailRemindersEnabled: enabled
-        });
-
+        await this.userRepository.update(userId, { emailRemindersEnabled: enabled });
         return { success: true, enabled };
     }
 
     async sendTestReminderEmail(userId: string) {
         try {
-            const user = await this.userRepository.findOne({
-                where: { id: userId }
-            });
+            const user = await this.userRepository.findOne({ where: { id: userId } });
+            if (!user) throw new Error('User not found');
 
-            if (!user) {
-                throw new Error('User not found');
-            }
-
-            // Get current streak for the test email
             const stats = await this.statsService.getStatsForUser(userId);
             const currentStreak = stats.currentStreak;
-
-            // Send test email
             await this.sendReminderEmail(user, currentStreak);
 
             return {
@@ -298,4 +247,4 @@ export class EmailReminderService {
             throw new Error(`Failed to send test email: ${error.message}`);
         }
     }
-} 
+}

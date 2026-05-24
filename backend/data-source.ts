@@ -12,6 +12,7 @@ import { UserActivity } from './src/entities/user-activity.entity';
 import { SpeedChallengeScore } from './src/entities/speed-challenge-score.entity';
 import { UserMistake } from './src/entities/user-mistake.entity';
 import { EmailReminder } from './src/entities/email-reminder.entity';
+import { PartnerSettings } from './src/entities/partner-settings.entity';
 
 // Helper to parse port with fallback
 const parsePort = (port?: string, fallback = 5432) =>
@@ -51,7 +52,8 @@ export default new DataSource(
         UserActivity,
         SpeedChallengeScore,
         UserMistake,
-        EmailReminder
+        EmailReminder,
+        PartnerSettings
       ],
       migrations: ['src/migrations/*.ts'],
     }
@@ -72,7 +74,8 @@ export default new DataSource(
         UserActivity,
         SpeedChallengeScore,
         UserMistake,
-        EmailReminder
+        EmailReminder,
+        PartnerSettings
       ],
       migrations: ['src/migrations/*.ts'],
     }

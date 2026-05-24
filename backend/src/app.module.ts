@@ -24,6 +24,8 @@ import { MistakeModule } from './mistake/mistake.module';
 import { EmailReminderModule } from './email-reminder/email-reminder.module';
 import { EmailReminder } from './entities/email-reminder.entity';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { PartnerModule } from './partner/partner.module';
+import { PartnerSettings } from './entities/partner-settings.entity';
 
 
 @Module({
@@ -54,6 +56,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
               SpeedChallengeScore,
               UserMistake,
               EmailReminder,
+              PartnerSettings,
             ],
             synchronize: false,
           }
@@ -75,6 +78,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
               SpeedChallengeScore,
               UserMistake,
               EmailReminder,
+              PartnerSettings,
             ],
             synchronize: false,
           };
@@ -98,6 +102,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     MistakeModule,
     EmailReminderModule,
     SchedulerModule,
+    PartnerModule,
     ThrottlerModule.forRoot([{
       ttl: 60000, // 1 minute
       limit: 10, // 10 requests per minute

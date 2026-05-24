@@ -16,6 +16,7 @@ import SpeedChallenge from './pages/SpeedChallenge';
 import ListenTest from './pages/ListenTest';
 import MistakeTest from './pages/MistakeTest';
 import VocabBrowser from './pages/VocabBrowser';
+import PartnerProgress from './pages/PartnerProgress';
 
 function App() {
     return (
@@ -29,6 +30,7 @@ function App() {
                         <Route path="/verify-email" element={<VerifyEmail />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/vocab" element={<VocabBrowser />} />
+                        <Route path="/partner/:userId" element={<PartnerProgress />} />
                         <Route path="/speed-challenge" element={
                             <ProtectedRoute>
                                 <SpeedChallenge />
@@ -75,7 +77,7 @@ function App() {
 
                 {/* Footer */}
                 <footer className="w-full p-4 text-center text-m text-gray-500">
-                    Version 1.0.12
+                    Version 1.1.0
                 </footer>
             </div>
         </AuthProvider>

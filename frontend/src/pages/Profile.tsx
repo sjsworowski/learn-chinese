@@ -17,6 +17,11 @@ const Profile = () => {
     const [profileEmail, setProfileEmail] = React.useState(user?.email || '');
     const [profileUsername, setProfileUsername] = React.useState(user?.username || '');
     const [savingProfile, setSavingProfile] = React.useState(false);
+    const [partnerEmail, setPartnerEmail] = React.useState('');
+    const [savingPartner, setSavingPartner] = React.useState(false);
+    const [partnerEmailChanged, setPartnerEmailChanged] = React.useState(false);
+    const [testPartnerEmailLoading, setTestPartnerEmailLoading] = React.useState(false);
+    const [copied, setCopied] = React.useState(false);
 
     React.useEffect(() => {
         if (user) {
@@ -27,6 +32,7 @@ const Profile = () => {
 
     React.useEffect(() => {
         fetchReminderSettings();
+        fetchPartnerSettings();
     }, []);
 
     const fetchReminderSettings = async () => {
@@ -63,6 +69,47 @@ const Profile = () => {
         } finally {
             setTestEmailLoading(false);
         }
+    };
+
+    const fetchPartnerSettings = async () => {
+        try {
+            const response = await axios.get(`${API_BASE}/partner/settings`);
+            setPartnerEmail(response.data.email || '');
+        } catch (error) {
+            console.error('Failed to fetch partner settings:', error);
+        }
+    };
+
+    const handleSavePartner = async () => {
+        setSavingPartner(true);
+        try {
+            await axios.put(`${API_BASE}/partner/settings`, { email: partnerEmail.trim() });
+            setPartnerEmailChanged(false);
+            toast.success('Partner email saved!');
+        } catch (error) {
+            toast.error('Failed to save partner email');
+        } finally {
+            setSavingPartner(false);
+        }
+    };
+
+    const sendTestPartnerEmail = async () => {
+        setTestPartnerEmailLoading(true);
+        try {
+            await axios.post(`${API_BASE}/partner/send-test`);
+            toast.success('Test email sent to your partner!');
+        } catch (error) {
+            toast.error('Failed to send test email');
+        } finally {
+            setTestPartnerEmailLoading(false);
+        }
+    };
+
+    const handleCopyProgressLink = () => {
+        const link = `${window.location.origin}/partner/${user?.id}`;
+        navigator.clipboard.writeText(link);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const handleSaveProfile = async () => {
@@ -147,6 +194,43 @@ const Profile = () => {
                                 className={`w-full py-3 rounded-lg font-semibold text-base transition ${profileHasChanges && !savingProfile ? 'btn-primary' : 'bg-gray-200 text-gray-500 cursor-not-allowed'} ${savingProfile ? 'opacity-60' : ''}`}
                             >
                                 {savingProfile ? 'Saving...' : 'Save changes'}
+                            </button>
+                        </div>
+
+                        {/* Partner reminder section */}
+                        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Learning partner</h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                                They'll get an email if you haven't studied in 48 hours, with a link to your progress page.
+                            </p>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Partner's email</label>
+                            <input
+                                value={partnerEmail}
+                                onChange={e => { setPartnerEmail(e.target.value); setPartnerEmailChanged(true); }}
+                                placeholder="her@email.com"
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                            <button
+                                onClick={handleSavePartner}
+                                disabled={!partnerEmailChanged || savingPartner}
+                                className={`w-full py-3 rounded-lg font-semibold text-base transition mb-3 ${partnerEmailChanged && !savingPartner ? 'btn-primary' : 'bg-gray-200 text-gray-500 cursor-not-allowed'} ${savingPartner ? 'opacity-60' : ''}`}
+                            >
+                                {savingPartner ? 'Saving...' : 'Save partner email'}
+                            </button>
+                            {partnerEmail && !partnerEmailChanged && (
+                                <button
+                                    onClick={sendTestPartnerEmail}
+                                    disabled={testPartnerEmailLoading}
+                                    className={`w-full py-3 rounded-lg font-semibold mb-3 text-base transition ${!testPartnerEmailLoading ? 'btn-secondary' : 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60'}`}
+                                >
+                                    {testPartnerEmailLoading ? 'Sending...' : 'Send test email to partner'}
+                                </button>
+                            )}
+                            <button
+                                onClick={handleCopyProgressLink}
+                                className="w-full py-3 rounded-lg bg-gray-100 text-gray-800 font-semibold text-base border border-gray-200 hover:bg-gray-200 transition"
+                            >
+                                {copied ? 'Link copied! ✓' : 'Copy progress link'}
                             </button>
                         </div>
                     </div>
